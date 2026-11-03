@@ -1068,6 +1068,7 @@ mod tests {
             kind: NativeLibKind::RawDylib,
             verbatim,
             whole_archive: false,
+            bundle: true,
         };
         assert_eq!(raw_dylib_file(&lib("SHELL32.DLL", true)), "SHELL32.DLL");
         assert_eq!(raw_dylib_file(&lib("kernel32.dll", true)), "kernel32.dll");
