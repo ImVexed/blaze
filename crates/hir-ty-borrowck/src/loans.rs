@@ -92,6 +92,11 @@ fn ignored<'db>(
     for (index, elem) in projection.iter().enumerate() {
         if *elem == ProjectionElem::Deref {
             let ty = ctx.place_ty(body, local, &projection[..index]).ty;
+            let ty = if matches!(ty.kind(), TyKind::Alias(_)) {
+                super::regions::normalize(ctx, ty).unwrap_or(ty)
+            } else {
+                ty
+            };
             match ty.kind() {
                 TyKind::Ref(_, _, rustc_ast_ir::Mutability::Not) | TyKind::RawPtr(..) => {
                     return true;
