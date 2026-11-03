@@ -9639,7 +9639,7 @@ fn run_holding(
         over_budget: Vec::new(),
         given_up: FxHashSet::default(),
     };
-    if from_manifest {
+    if from_manifest && !programs[0].defers_first_edit() {
         programs[0].build_from_store();
         builds.unasked.push(0);
     } else if programs[0].dehydrate() {
@@ -9679,6 +9679,19 @@ fn run_holding(
     let mut placed = Placed::default();
     // The programs whose tests blaze's harness lists, by their object.
     let mut harnessed: FxHashSet<PathBuf> = FxHashSet::default();
+    let program = &programs[0];
+    if program.defers_first_edit()
+        && of_tests(&program.args)
+        && hir::attach_db(&db, || {
+            crates_named(&db, &program.args.krate, &program.args)
+                .unwrap_or_default()
+                .first()
+                .is_some_and(|&krate| harness_main(&db, &listed.of(&db, krate).functions).is_some())
+        })
+        && harnesses(&db, [&program.args], None).is_empty()
+    {
+        harnessed.insert(program.args.out.clone());
+    }
     loop {
         WatchedFile::watch_included(&mut files, &db);
         // An `include!` in a body is first seen when the body is compiled. Only the crates
@@ -10940,10 +10953,22 @@ fn panic_message(panic: &(dyn std::any::Any + Send)) -> &str {
 }
 
 impl Program {
+    /// Whether preparing a native executable's first patch can wait for its first edit.
+    fn defers_first_edit(&self) -> bool {
+        self.table.is_empty()
+            && self.args.exe.is_some()
+            && !self.args.shared
+            && !self.args.staticlib
+            && !hir_ty_codegen::Target::current().is_wasm()
+    }
+
     /// Whether to build it again with nobody asking, for the code of the checkout its last
     /// build took from the store: no patch replaces that, so the first edit would wait for
     /// all of it to be compiled.
     fn dehydrate(&mut self) -> bool {
+        if self.defers_first_edit() {
+            return false;
+        }
         if !self.known.dehydrate() {
             return false;
         }
