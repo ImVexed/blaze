@@ -67,6 +67,7 @@ cargo_metadata.workspace = true
 
 hir.workspace = true
 hir-def.workspace = true
+hir-expand.workspace = true
 hir-ty.workspace = true
 hir-ty-mir.workspace = true
 hir-ty-codegen.workspace = true

@@ -9,7 +9,15 @@
 
 use std::hash::{Hash, Hasher};
 
-use hir_def::{FunctionId, Lookup, ModuleDefId, expr_store::Body};
+use hir_def::{
+    FunctionId, Lookup, ModuleDefId, expr_store::Body, nameres::MacroSubNs,
+    resolver::HasResolver as _,
+};
+use hir_expand::{
+    MacroDefId, MacroDefKind,
+    mod_path::{ModPath, PathKind},
+    name::Name,
+};
 use ide_db::{
     RootDatabase,
     base_db::{EditionedFileId, relevant_crates},
@@ -463,7 +471,7 @@ fn types(db: &RootDatabase, file: FileId) -> FxHashMap<String, u64> {
 /// A hash of everything in the file but the bodies nothing else sees into, or `None` when
 /// the file is not read as a file of its own. `functions` are those written in it.
 fn outline(db: &RootDatabase, file: FileId, functions: &[FunctionId]) -> Option<u64> {
-    let Some(seen) = Written::of(db, functions) else {
+    let Some(seen) = Written::of(db, file, functions) else {
         if std::env::var_os("BLAZE_STATS").is_some() {
             eprintln!("outline: {file:?} is included in another file");
         }
@@ -473,7 +481,8 @@ fn outline(db: &RootDatabase, file: FileId, functions: &[FunctionId]) -> Option<
     let edition =
         relevant_crates(db, file).first().map_or(Edition::CURRENT, |it| it.data(db).edition);
     let tree = EditionedFileId::new(db, file, edition).parse(db).syntax_node();
-    let (hash, found) = hash_outside_bodies(&tree, &seen.declaring, &FxHashSet::default());
+    let (hash, found) =
+        hash_outside_bodies(&tree, &seen.declaring, &FxHashSet::default(), &seen.native_tests);
     // Each of them has to be one of the bodies that were kept in.
     (found == seen.declaring.len()).then_some(hash)
 }
@@ -487,14 +496,14 @@ fn outline_without(
     added: &FxHashSet<TextRange>,
 ) -> Option<u64> {
     let functions = listed.in_files(db, &[file]).pop().flatten()?;
-    let seen = hir::attach_db(db, || Written::of(db, &functions))?;
+    let seen = hir::attach_db(db, || Written::of(db, file, &functions))?;
     if seen.declaring.iter().any(|it| added.contains(it)) {
         return None;
     }
     let edition =
         relevant_crates(db, file).first().map_or(Edition::CURRENT, |it| it.data(db).edition);
     let tree = EditionedFileId::new(db, file, edition).parse(db).syntax_node();
-    let (hash, found) = hash_outside_bodies(&tree, &seen.declaring, added);
+    let (hash, found) = hash_outside_bodies(&tree, &seen.declaring, added, &seen.native_tests);
     (found == seen.declaring.len()).then_some(hash)
 }
 
@@ -571,8 +580,8 @@ fn added_functions(was: &SyntaxNode, now: &SyntaxNode) -> Option<Vec<ast::Fn>> {
     }
     let skipped: FxHashSet<TextRange> = added.iter().map(|it| it.syntax().text_range()).collect();
     let none = FxHashSet::default();
-    let same =
-        hash_outside_bodies(was, &none, &none).0 == hash_outside_bodies(now, &none, &skipped).0;
+    let same = hash_outside_bodies(was, &none, &none, &none).0
+        == hash_outside_bodies(now, &none, &skipped, &none).0;
     same.then_some(added)
 }
 
@@ -626,11 +635,14 @@ fn added_alone(func: &ast::Fn) -> bool {
         && !impl_trait_parameter
         && !inline
         && !declares
-        && is_unseen_body(body.syntax())
+        && is_unseen_body(body.syntax(), false)
 }
 
 /// What looking at the functions written in a file tells that how they are written does not.
 struct Written {
+    /// Current ranges of direct-source functions whose plain `test` attribute resolves to
+    /// the builtin. Unavailable attribute macros can also leave direct-source functions.
+    native_tests: FxHashSet<TextRange>,
     /// Where the functions are whose bodies declare items.
     declaring: FxHashSet<TextRange>,
 }
@@ -638,7 +650,9 @@ struct Written {
 impl Written {
     /// `None` when the functions are in a file that `include!` reads: those are written by a
     /// macro as far as we can tell.
-    fn of(db: &RootDatabase, functions: &[FunctionId]) -> Option<Written> {
+    fn of(db: &RootDatabase, file: FileId, functions: &[FunctionId]) -> Option<Written> {
+        let mut native_tests = FxHashSet::default();
+        let test = ModPath::from_segments(PathKind::Plain, [Name::new_root("test")]);
         let mut declaring = FxHashSet::default();
         for &func in functions {
             let at = func.lookup(db).id;
@@ -652,12 +666,46 @@ impl Written {
                 // is left out.
                 continue;
             }
+            if at.to_node(db).attrs().any(|attr| attr.simple_name().is_some_and(|it| it == "test"))
+                && is_builtin_test(func.resolver(db).resolve_path_as_macro_def(
+                    db,
+                    &test,
+                    Some(MacroSubNs::Attr),
+                ))
+            {
+                native_tests.insert(at.to_range(db));
+            }
             if declares_items(db, func) {
                 declaring.insert(at.to_range(db));
             }
         }
-        Some(Written { declaring })
+        if !native_tests.is_empty() {
+            // One file can be read in modules that give its attributes different meanings,
+            // including a macro that leaves no function to list in one of them.
+            let mut modules = relevant_crates(db, file)
+                .iter()
+                .flat_map(|&krate| {
+                    hir_def::nameres::crate_def_map(db, krate).modules_for_file(db, file)
+                })
+                .peekable();
+            if modules.peek().is_none()
+                || !modules.all(|module| {
+                    is_builtin_test(module.resolver(db).resolve_path_as_macro_def(
+                        db,
+                        &test,
+                        Some(MacroSubNs::Attr),
+                    ))
+                })
+            {
+                native_tests.clear();
+            }
+        }
+        Some(Written { native_tests, declaring })
     }
+}
+
+fn is_builtin_test(def: Option<MacroDefId>) -> bool {
+    matches!(def.map(|it| it.kind), Some(MacroDefKind::BuiltInAttr(_, expander)) if expander.is_test())
 }
 
 fn declares_items(db: &RootDatabase, func: FunctionId) -> bool {
@@ -711,11 +759,19 @@ fn skeleton_of(tree: &SyntaxNode) -> Option<u64> {
         })
     };
     for node in tree.descendants() {
-        if written_by_macro(&node) || is_unseen_body(&node) && has_items(&node) {
+        if written_by_macro(&node) || is_unseen_body(&node, false) && has_items(&node) {
             return None;
         }
     }
-    Some(hash_outside_bodies(tree, &FxHashSet::default(), &FxHashSet::default()).0)
+    Some(
+        hash_outside_bodies(
+            tree,
+            &FxHashSet::default(),
+            &FxHashSet::default(),
+            &FxHashSet::default(),
+        )
+        .0,
+    )
 }
 
 /// The hash, and how many of the `declaring` functions were come by. The functions at
@@ -724,6 +780,7 @@ fn hash_outside_bodies(
     file: &SyntaxNode,
     declaring: &FxHashSet<TextRange>,
     skipped: &FxHashSet<TextRange>,
+    native_tests: &FxHashSet<TextRange>,
 ) -> (u64, usize) {
     let mut hasher = FxHasher::default();
     let mut found = 0;
@@ -739,8 +796,10 @@ fn hash_outside_bodies(
                 node.kind().hash(&mut hasher);
                 if node.kind() == SyntaxKind::FN && declaring.contains(&node.text_range()) {
                     found += 1;
-                } else if is_unseen_body(&node)
-                    && node.parent().is_none_or(|it| !declaring.contains(&it.text_range()))
+                } else if is_unseen_body(
+                    &node,
+                    node.parent().is_some_and(|it| native_tests.contains(&it.text_range())),
+                ) && node.parent().is_none_or(|it| !declaring.contains(&it.text_range()))
                 {
                     walk.skip_subtree();
                 }
@@ -762,8 +821,9 @@ fn hash_outside_bodies(
 }
 
 /// Whether the node is the body of a function that nothing else sees into, going by how the
-/// function is written. What its body declares takes name resolution to tell.
-fn is_unseen_body(node: &SyntaxNode) -> bool {
+/// function is written and whether its `test` attribute resolved to the builtin. What its
+/// body declares takes name resolution to tell.
+fn is_unseen_body(node: &SyntaxNode, native_test: bool) -> bool {
     if node.kind() != SyntaxKind::BLOCK_EXPR {
         return false;
     }
@@ -774,7 +834,7 @@ fn is_unseen_body(node: &SyntaxNode) -> bool {
     let names_its_type = func.ret_type().is_some_and(|it| {
         it.syntax().descendants().any(|it| it.kind() == SyntaxKind::IMPL_TRAIT_TYPE)
     });
-    if names_its_type || !is_inert(func.syntax()) {
+    if names_its_type || !is_inert(func.syntax(), native_test) {
         return false;
     }
     // rustc copies the body into the callers, also the ones it compiled for us.
@@ -799,15 +859,18 @@ fn is_unseen_body(node: &SyntaxNode) -> bool {
     // input is the macro's.
     func.syntax().ancestors().skip(1).all(|it| match it.kind() {
         SyntaxKind::SOURCE_FILE | SyntaxKind::ITEM_LIST | SyntaxKind::ASSOC_ITEM_LIST => true,
-        SyntaxKind::MODULE | SyntaxKind::IMPL | SyntaxKind::TRAIT => is_inert(&it),
+        SyntaxKind::MODULE | SyntaxKind::IMPL | SyntaxKind::TRAIT => is_inert(&it, false),
         _ => false,
     })
 }
 
 /// Whether no attribute on the item can be a macro that rewrites it.
-fn is_inert(item: &SyntaxNode) -> bool {
+fn is_inert(item: &SyntaxNode, native_test: bool) -> bool {
     let Some(item) = ast::AnyHasAttrs::cast(item.clone()) else { return false };
-    item.attrs().all(|attr| attr.simple_name().is_some_and(|name| INERT.contains(&name.as_str())))
+    item.attrs().all(|attr| {
+        attr.simple_name()
+            .is_some_and(|name| INERT.contains(&name.as_str()) || native_test && name == "test")
+    })
 }
 
 /// The crate the file is a module of, when that is one of `used`, which the crates in `built`
@@ -949,11 +1012,211 @@ impl Listed {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use ide_db::{ChangeWithProcMacros, base_db::SourceDatabase as _};
     use syntax::SourceFile;
+    use test_fixture::WithFixture as _;
+
+    fn body_edits(
+        fixture: &str,
+        (direct, native, attributes): (usize, usize, &[Option<&str>]),
+        proc_attrs: bool,
+        edits: &[(&str, &str)],
+    ) -> Vec<bool> {
+        let (mut db, files) = RootDatabase::with_many_files(fixture);
+        let file = files[0].file_id(&db);
+        if proc_attrs {
+            db.enable_proc_attr_macros();
+        }
+        let listed = Listed::default();
+        hir::attach_db(&db, || {
+            let sema = hir::Semantics::new(&db);
+            let modules: Vec<_> = sema.file_to_module_defs(file).collect();
+            assert_eq!(modules.len(), attributes.len());
+            let test = ModPath::from_segments(PathKind::Plain, [Name::new_root("test")]);
+            let mut resolved: Vec<_> = modules
+                .into_iter()
+                .map(|module| {
+                    listed.of(&db, module.krate(&db));
+                    let module: hir_def::ModuleId = module.into();
+                    let resolved = module.resolver(&db).resolve_path_as_macro_def(
+                        &db,
+                        &test,
+                        Some(MacroSubNs::Attr),
+                    );
+                    resolved.map(|it| match it.kind {
+                        MacroDefKind::BuiltInAttr(_, expander) if expander.is_test() => "builtin",
+                        MacroDefKind::ProcMacro(..) => "proc",
+                        _ => "other",
+                    })
+                })
+                .collect();
+            resolved.sort_unstable();
+            let mut attributes = attributes.to_vec();
+            attributes.sort_unstable();
+            assert_eq!(resolved, attributes);
+            let functions = listed.in_files(&db, &[file]).pop().flatten().unwrap();
+            let sources =
+                functions.iter().filter(|it| !it.lookup(&db).id.file_id.is_macro()).count();
+            assert_eq!(sources, direct);
+            assert_eq!(Written::of(&db, file, &functions).unwrap().native_tests.len(), native);
+        });
+        let mut outlines = Outlines::default();
+        let mut found = Vec::new();
+        for &(before, after) in edits {
+            outlines.before_edit(&db, &listed, &[file]);
+            let old = db.file_text(file).text(&db).to_string();
+            assert!(old.contains(before), "{before:?}");
+            let mut change = ChangeWithProcMacros::default();
+            change.change_file(file, Some(old.replacen(before, after, 1)));
+            db.apply_change(change);
+            found.push(outlines.after_edit(&db, &listed, vec![file]).pop().unwrap().bodies_only);
+        }
+        found
+    }
+
+    #[test]
+    fn native_test_body_edits_use_the_current_semantic_ranges() {
+        let fixture = r#"
+//- /lib.rs crate:tests cfg:test
+#[rustc_builtin_macro]
+pub macro test($item:item) {}
+macro_rules! assert_eq { ($left:expr, $right:expr) => {{ let _ = ($left, $right); }}; }
+fn black_box(value: u32) -> u32 { value }
+#[test]
+fn first() { assert_eq!(12, 12); }
+#[test]
+fn later() { assert_eq!(1, 1); }
+"#;
+        assert_eq!(
+            body_edits(
+                fixture,
+                (3, 2, &[Some("builtin")]),
+                true,
+                &[
+                    ("assert_eq!(12, 12)", "assert_eq!(12, black_box(12))"),
+                    ("assert_eq!(1, 1)", "assert_eq!(1, black_box(1))"),
+                    ("assert_eq!(12, black_box(12))", "\n    assert_eq!(12, black_box(12))"),
+                ],
+            ),
+            [true, true, true],
+        );
+    }
+
+    #[test]
+    fn native_test_bodies_keep_the_existing_visibility_guards() {
+        for function in [
+            "#[test] const fn f() { let _ = 12; }",
+            "#[test] async fn f() { let _ = 12; }",
+            "#[test] fn f() -> impl Sized { 12 }",
+            "#[test] #[inline(always)] fn f() { let _ = 12; }",
+            "#[test] fn f() { fn nested() { let _ = 12; } }",
+            "#[test] fn f() { #![allow(unused)] let _ = 12; }",
+        ] {
+            let fixture = format!(
+                "//- /lib.rs crate:tests cfg:test\n\
+                 #[rustc_builtin_macro]\npub macro test($item:item) {{}}\n{function}"
+            );
+            assert_eq!(
+                body_edits(&fixture, (1, 1, &[Some("builtin")]), true, &[("12", "13")]),
+                [false],
+                "{function}"
+            );
+        }
+    }
+
+    #[test]
+    fn a_proc_attribute_named_test_keeps_its_input_visible() {
+        for (attribute, import) in
+            [("#[test]", "identity"), ("#[test(const EMITTED: u8 = 1;)]", "input_replace")]
+        {
+            let fixture = format!(
+                "//- proc_macros: identity, input_replace\n\
+                 //- /lib.rs crate:tests cfg:test\n\
+                 use proc_macros::{import} as test;\n\
+                 {attribute}\nfn f() {{ let _ = 12; }}"
+            );
+            assert_eq!(
+                body_edits(&fixture, (0, 0, &[Some("proc")]), true, &[("12", "13")]),
+                [false],
+                "{import}"
+            );
+        }
+    }
+
+    #[test]
+    fn unavailable_test_attributes_keep_direct_source_bodies_visible() {
+        for (fixture, proc_attrs, attribute) in [
+            ("//- /lib.rs crate:tests cfg:test\n#[test] fn f() { let _ = 12; }", true, None),
+            (
+                "//- proc_macros: identity\n\
+                 //- /lib.rs crate:tests cfg:test\n\
+                 use proc_macros::identity as test;\n#[test] fn f() { let _ = 12; }",
+                false,
+                Some("proc"),
+            ),
+            (
+                "//- /lib.rs crate:tests deps:custom cfg:test\n\
+                 use custom::test;\n#[test] fn f() { let _ = 12; }\n\
+                 //- /custom.rs crate:proc-macro:custom new_source_root:library\n\
+                 #[proc_macro_attribute]\npub fn test() {}",
+                true,
+                Some("proc"),
+            ),
+        ] {
+            assert_eq!(
+                body_edits(fixture, (1, 0, &[attribute]), proc_attrs, &[("12", "13")]),
+                [false],
+                "{fixture}",
+            );
+        }
+    }
+
+    #[test]
+    fn a_shared_file_needs_builtin_test_in_every_module() {
+        for (second, direct, native, attributes, bodies_only) in [
+            (
+                "use proc_macros::input_replace as test;",
+                1,
+                0,
+                [Some("builtin"), Some("proc")],
+                false,
+            ),
+            (
+                "#[rustc_builtin_macro] pub macro test($item:item) {}",
+                2,
+                1,
+                [Some("builtin"), Some("builtin")],
+                true,
+            ),
+        ] {
+            let fixture = format!(
+                "//- proc_macros: input_replace\n\
+                 //- /shared.rs\n\
+                 use super::test;\n#[test] fn f() {{ let _ = 12; }}\n\
+                 //- /lib.rs crate:tests cfg:test\nmod first;\nmod second;\n\
+                 //- /first.rs\n\
+                 #[rustc_builtin_macro] pub macro test($item:item) {{}}\n\
+                 #[path = \"shared.rs\"] mod shared;\n\
+                 //- /second.rs\n{second}\n\
+                 #[path = \"shared.rs\"] mod shared;"
+            );
+            assert_eq!(
+                body_edits(&fixture, (direct, native, &attributes), true, &[("12", "13")]),
+                [bodies_only],
+                "{second}",
+            );
+        }
+    }
 
     fn hash(text: &str) -> u64 {
         let tree = SourceFile::parse(text, Edition::CURRENT).syntax_node();
-        hash_outside_bodies(&tree, &FxHashSet::default(), &FxHashSet::default()).0
+        hash_outside_bodies(
+            &tree,
+            &FxHashSet::default(),
+            &FxHashSet::default(),
+            &FxHashSet::default(),
+        )
+        .0
     }
 
     #[track_caller]
@@ -1157,7 +1420,7 @@ mod tests {
             let tree = SourceFile::parse(text, Edition::CURRENT).syntax_node();
             let declaring = tree.descendants().find(|it| it.kind() == SyntaxKind::FN).unwrap();
             let declaring = FxHashSet::from_iter([declaring.text_range()]);
-            hash_outside_bodies(&tree, &declaring, &FxHashSet::default())
+            hash_outside_bodies(&tree, &declaring, &FxHashSet::default(), &FxHashSet::default())
         };
         let (one, found) = hash(&text(1));
         assert_eq!(found, 1);
