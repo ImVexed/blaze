@@ -4843,6 +4843,7 @@ fn std_unit_at(
         hasher.update(bytes);
     };
     field(b"blaze standard library 5");
+    field(&[hir_ty_codegen::relaxed_fma() as u8]);
     field(format!("{:?} {debug:?}", args.selection.target).as_bytes());
     // A file of one of its crates whose text is blaze's, not the toolchain's.
     if args.run_tool {

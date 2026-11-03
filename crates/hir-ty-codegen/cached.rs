@@ -429,6 +429,15 @@ impl Entry {
     /// `program` is the one program the entry is of, where what the calls of an entry reach
     /// is not the same in every program that has a function of its name.
     pub(super) fn key(name: &str, debug: Told, program: Option<&[u8; 32]>) -> Option<[u8; KEY]> {
+        Self::key_with_fma(name, debug, program, super::relaxed_fma())
+    }
+
+    fn key_with_fma(
+        name: &str,
+        debug: Told,
+        program: Option<&[u8; 32]>,
+        relaxed_fma: bool,
+    ) -> Option<[u8; KEY]> {
         let mut hasher = Sha256::new();
         // Each with its length, so that no two lists of them are the same bytes.
         let mut field = |bytes: &[u8]| {
@@ -437,6 +446,8 @@ impl Entry {
         };
         // 12: an import of the standard library's unit is checked (#328).
         field(b"blaze entry 12");
+        // Both modes get new keys, including strict entries predating this distinction.
+        field(&[relaxed_fma as u8]);
         field(program.map_or(&[][..], |it| it));
         // Code of one producer is not what another would have given.
         field(super::Backend::from_env().ok()?.to_string().as_bytes());
@@ -1247,6 +1258,16 @@ mod tests {
         }
         for reloc in &entry.code.code().relocs {
             ids.reloc(reloc, FuncId::from_u32(0));
+        }
+    }
+
+    #[test]
+    fn strict_and_relaxed_fma_entries_have_distinct_keys() {
+        for debug in [Told::Nothing, Told::Lines, Told::Variables] {
+            for program in [None, Some(&[7; 32])] {
+                let key = |relaxed| Entry::key_with_fma("f16::mul_add", debug, program, relaxed);
+                assert_ne!(key(false).expect("strict key"), key(true).expect("relaxed key"));
+            }
         }
     }
 

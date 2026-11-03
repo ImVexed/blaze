@@ -37,7 +37,7 @@ use super::*;
 /// shaped by its context (which negations LLVM folds into it), call the function instead of refusing
 /// the build. The call computes the same fused result; only the NaN a folded negation would keep can
 /// differ from rustc's.
-fn relaxed_fma() -> bool {
+pub fn relaxed_fma() -> bool {
     std::env::var_os("BLAZE_FMA_RELAXED").is_some_and(|v| v != "0")
 }
 

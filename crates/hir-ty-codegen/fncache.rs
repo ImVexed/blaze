@@ -165,7 +165,12 @@ pub(super) fn cache_code(
         return Err(format!("`{name}` is not cached: {why}"));
     }
     let mut hasher = rustc_stable_hash::StableSipHasher128::new();
-    (FORMAT, super::target::Target::current().triple(), super::store::toolchain())
+    (
+        FORMAT,
+        super::target::Target::current().triple(),
+        super::store::toolchain(),
+        super::relaxed_fma(),
+    )
         .hash(&mut hasher);
     closure.checked.hash(&mut hasher);
     for arg in closure.args.as_ref().iter() {
@@ -207,6 +212,7 @@ pub fn tests_reach(
         "tests by stable names",
         super::target::Target::current().triple(),
         super::store::toolchain(),
+        super::relaxed_fma(),
     );
     let started = std::time::Instant::now();
     let mut took = Vec::new();

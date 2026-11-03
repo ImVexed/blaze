@@ -227,6 +227,7 @@ macro_rules! unsupported {
 
 // After `unsupported!`, which they use.
 mod fma;
+pub use fma::relaxed_fma;
 mod sve;
 mod wasm_simd;
 
