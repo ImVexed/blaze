@@ -2950,6 +2950,7 @@ dependencies = [
  "either",
  "expect-test",
  "hir",
+ "hir-ty-borrowck",
  "ide-db",
  "itertools 0.15.0",
  "paths",
