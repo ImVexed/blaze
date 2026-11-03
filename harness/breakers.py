@@ -7,7 +7,7 @@ The crates in CRATES are run through cratetest.py: what broke was in their tests
 NIGHTLY_CRATES too, with RUSTC_BOOTSTRAP=1 for the nightly feature each uses.
 Prints "N of N right" and exits non-zero when a case differs.
 """
-import os, subprocess, sys
+import os, platform, subprocess, sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
@@ -19,6 +19,14 @@ CRATES = ["devdep", "blanket", "edition2015", "fragment", "procmacro", "overlap"
 # would make the touch that has cargo link the test again do nothing.
 NIGHTLY_CRATES = ["allocated"]
 NIGHTLY_ENV = {"RUSTC_BOOTSTRAP": "1", "CARGO_UNSTABLE_CHECKSUM_FRESHNESS": "false"}
+if sys.platform.startswith("linux") and platform.machine().lower() in ("x86_64", "amd64"):
+    NIGHTLY_CRATES.append("f16_fma_relaxed")
+CRATE_ENV = {
+    "f16_fma_relaxed": {
+        "BLAZE_FMA_RELAXED": "1",
+        "RUSTFLAGS": "-C link-dead-code -C target-cpu=x86-64-v3",
+    },
+}
 # What is reduced and not fixed: these are expected to differ, and are told apart when they do.
 OPEN = {"assert_message", "future_unwind_flags", "fragment_edition_through_macro", "assert_long_expression"}
 # Frames that are larger than rustc's, where a program counts on rustc's: the answer is right and the room is not.
@@ -64,7 +72,8 @@ def main():
     if not sys.argv[1:]:
         # What breaks in a crate's tests and not in a program: each a crate for cratetest.py.
         for crate in CRATES + NIGHTLY_CRATES:
-            env = dict(os.environ, **NIGHTLY_ENV) if crate in NIGHTLY_CRATES else None
+            env = ({**os.environ, **NIGHTLY_ENV, **CRATE_ENV.get(crate, {})}
+                   if crate in NIGHTLY_CRATES else None)
             run = subprocess.run([sys.executable, os.path.join(HERE, "cratetest.py"), os.path.join(HERE, "breakers", crate)],
                                  capture_output=True, text=True, env=env)
             same = run.returncode == 0 and "skipped" not in run.stdout

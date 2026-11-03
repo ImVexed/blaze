@@ -425,6 +425,18 @@ impl<'db> FunctionCx<'_, 'db> {
             unsupported!("`{name}` of {lane} in an x86-64 function with FMA");
         }
         if lane == types::F16 && !self.enables("avx512fp16") {
+            if scalar && relaxed_fma() {
+                let mut values = [dst; 3];
+                for (i, operand) in site.operands.iter().enumerate() {
+                    let (addr, _) = self.operand(operand)?;
+                    let value = self.builder.ins().load(lane, MEM, addr, 0);
+                    values[i] = if site.negated[i] { self.soft_neg(value) } else { value };
+                }
+                let [a, b, c] = values;
+                let value = self.soft_fma(a, b, c)?;
+                self.builder.ins().store(MEM, value, dst, 0);
+                return Ok(());
+            }
             unsupported!(
                 "`{name}` of f16 in an x86-64 function with FMA and without AVX512-FP16, \
                  which LLVM fuses by its context"

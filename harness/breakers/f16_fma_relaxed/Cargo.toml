@@ -1,0 +1,6 @@
+[package]
+name = "f16-fma-relaxed"
+version = "0.0.0"
+edition = "2024"
+
+[workspace]
