@@ -33,6 +33,14 @@
 
 use super::*;
 
+/// BLAZE_FMA_RELAXED=1: where the fused multiply-add rustc's MIR inliner put into a caller would be
+/// shaped by its context (which negations LLVM folds into it), call the function instead of refusing
+/// the build. The call computes the same fused result; only the NaN a folded negation would keep can
+/// differ from rustc's.
+fn relaxed_fma() -> bool {
+    std::env::var_os("BLAZE_FMA_RELAXED").is_some_and(|v| v != "0")
+}
+
 /// What runs after the fma, in its block: whether FastISel can select it.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 enum Step {
@@ -359,6 +367,7 @@ impl<'db> FunctionCx<'_, 'db> {
         let name = FunctionSignature::of(self.cg.db, func).name.as_str().to_owned();
         match self.rustc_inlines(caller, func)? {
             Some(false) => return Ok(false),
+            None if relaxed_fma() => return Ok(false),
             None => unsupported!(
                 "a call of `{name}`, whose fused multiply-add rustc's MIR inliner may or may not \
                  have put into this function, where LLVM fuses it by its context"
@@ -368,6 +377,9 @@ impl<'db> FunctionCx<'_, 'db> {
         let Some(wrapper) = self.wrapper(func)? else {
             // As it is in `func` alone, so the call of what `func` makes alone is that.
             if let Err(why) = self.decided_inside(func, args) {
+                if relaxed_fma() {
+                    return Ok(false);
+                }
                 unsupported!(
                     "a call of `{name}`, which rustc's MIR inliner puts into this function, \
                      where LLVM fuses its fused multiply-add by the context: {why}"
