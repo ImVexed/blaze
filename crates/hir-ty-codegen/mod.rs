@@ -6451,6 +6451,12 @@ impl<'a, 'db> ObjectCodegen<'a, 'db> {
         let Some(mixed) = &self.mixed else { return Ok(instance.clone()) };
         let (db, asking) = (self.db, instance.checked);
         let nameless = || {
+            if self.symbols.nothing_of_rustc()
+                && !self.symbols.onto_rustcs()
+                && self.base.is_none_or(|base| !base.rustc)
+            {
+                return Ok(asking);
+            }
             // Only the crates that made a copy of a function of its name, or of a closure
             // written in one, can have.
             let makers = home::written_in(db, instance).map(|func| {
