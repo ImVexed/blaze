@@ -1527,6 +1527,12 @@ impl Lazy {
     /// Whether its macros expand in a session: unless the store says none of its expansions
     /// left state.
     fn stateful(&self) -> bool {
+        // BLAZE_MACRO_STATELESS=1: trust every proc-macro crate as stateless, so its expansions are
+        // keyed and kept across revisions. The allocator check counts a lazily filled cache (bevy's
+        // manifest, a OnceLock) as state, which reran every expansion of such a crate after any edit.
+        if std::env::var_os("BLAZE_MACRO_STATELESS").is_some_and(|v| v != "0") {
+            return false;
+        }
         self.verdict != Verdict::Stateless
     }
 
