@@ -522,6 +522,106 @@ fn bad<'world>() -> <Read as Data>::Item<'world> {
         );
     }
 
+    #[test]
+    fn bevy_param_set_signature_compatibility() {
+        use syntax::{AstNode as _, ast};
+        use test_fixture::WithFixture as _;
+
+        let model = r#"
+//- minicore: sized, copy
+//- /lib.rs crate:MODEL_CRATE
+pub trait SystemParam {
+    type State: 'static;
+    type Item<'world, 'state>: SystemParam<State = Self::State>;
+}
+pub struct Query<'world, 'state, D> {
+    world: &'world (),
+    state: &'state (),
+    data: *mut D,
+}
+pub struct G<'a, T: 'a> { value: &'a T }
+impl<D: 'static> SystemParam for Query<'_, '_, D> {
+    type State = ();
+    type Item<'world, 'state> = Query<'world, 'state, D>;
+}
+pub struct ParamSet<'world, 'state, P: SystemParam> {
+    param_states: &'state mut P::State,
+    world: &'world (),
+}
+impl<P: SystemParam> ParamSet<'_, '_, P> {
+    pub fn p0<'a>(&'a mut self) -> P::Item<'a, 'a> { loop {} }
+}
+//- /main.rs crate:main deps:MODEL_CRATE
+use MODEL_CRATE::{G, ParamSet, Query};
+fn probe(mut set: ParamSet<Query<&u32>>) {
+EXPECT_WF
+    let _ = set.p0();
+EXPECT_ESCAPE
+}
+"#;
+        let rejected = "          //^^^^^^^^ error: borrowed data escapes outside of function";
+        check_diagnostics(
+            &model
+                .replace("MODEL_CRATE", "paramset_model")
+                .replace(
+                    "EXPECT_WF",
+                    "                //^^^^^^^^^^^^^^^^^^^^^ error: the type does not fulfill the required lifetime",
+                )
+                .replace("EXPECT_ESCAPE", rejected),
+        );
+        check_diagnostics(
+            &model
+                .replace("MODEL_CRATE", "bevy_ecs")
+                .replace("ParamSet", "OrdinarySet")
+                .replace(
+                    "EXPECT_WF",
+                    "                //^^^^^^^^^^^^^^^^^^^^^^^^ error: the type does not fulfill the required lifetime",
+                )
+                .replace("EXPECT_ESCAPE", rejected),
+        );
+        let accepted = model
+            .replace("MODEL_CRATE", "bevy_ecs")
+            .replace("EXPECT_WF", "")
+            .replace("EXPECT_ESCAPE", "");
+        let accepted = format!(
+            "{accepted}{}",
+            r#"
+fn bound_fn(_: ParamSet<Query<for<'a> fn(G<'a, u32>)>>) {}
+fn bad<'world>(_: ParamSet<'world, '_, Query<&u32>>) -> &'world u32 {
+    let local = 0;
+    &local
+  //^^^^^^ error: cannot return reference to local variable
+}
+"#,
+        );
+        let (db, files) = ide_db::RootDatabase::with_many_files(&accepted);
+        hir::attach_db(&db, || {
+            let sema = hir::Semantics::new(&db);
+            let mut checked = 0;
+            for file in files {
+                let source = sema.parse(file);
+                for function in source.syntax().descendants().filter_map(ast::Fn::cast) {
+                    let Some(function) = sema.to_def(&function) else { continue };
+                    let name = function.name(&db);
+                    let expected: &[&str] = match name.as_str() {
+                        "probe" | "bound_fn" => &[],
+                        "bad" => &["E0515"],
+                        _ => continue,
+                    };
+                    checked += 1;
+                    let def = hir::DefWithBody::Function(function).try_into().unwrap();
+                    for mode in [hir_ty_borrowck::Mode::Nll, hir_ty_borrowck::Mode::Polonius] {
+                        let result = hir_ty_borrowck::borrowck_in_mode(&db, def, mode);
+                        assert_eq!(result.skipped, None, "{name:?} in {mode:?}");
+                        let codes: Vec<_> = result.diagnostics.iter().map(|it| it.code).collect();
+                        assert_eq!(codes, expected, "{name:?} in {mode:?}");
+                    }
+                }
+            }
+            assert_eq!(checked, 3);
+        });
+    }
+
     // biome's `markup!`: a value with no destructor and no interior mutability is promoted,
     // whatever its type.
     #[test]

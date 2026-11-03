@@ -32,6 +32,7 @@ paths.workspace = true
 expect-test = "1.5.1"
 
 # local deps
+hir-ty-borrowck.workspace = true
 test-utils.workspace = true
 test-fixture.workspace = true
 

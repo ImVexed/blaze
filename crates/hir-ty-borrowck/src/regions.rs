@@ -9,7 +9,8 @@
 //! signature does not say it outlives is rustc's "lifetime may not live long enough".
 
 use hir_def::{
-    AdtId, CallableDefId, DefWithBodyId, GenericDefId, ItemContainerId, Lookup as _,
+    AdtId, CallableDefId, DefWithBodyId, GenericDefId, HasModule as _, ItemContainerId,
+    Lookup as _,
     hir::{Pat, Statement},
     resolver::HasResolver as _,
     signatures::FunctionSignature,
@@ -2709,6 +2710,9 @@ impl<'db> Builder<'_, '_, 'db> {
             .map(|&it| self.regions.local_tys[it.into_raw().into_u32() as usize])
             .collect();
         let mut signature = signature;
+        for &ty in &signature {
+            self.bevy_param_set_implied_bounds(ty, &mut pairs);
+        }
         signature.extend(self.impl_header_types());
         let mut seen = FxHashSet::default();
         for ty in signature {
@@ -2742,6 +2746,112 @@ impl<'db> Builder<'_, '_, 'db> {
             }
         }
         self.regions.known = known;
+    }
+
+    /// rustc's `consider_implied_bounds_hack_for_ty` (#119956): only Bevy's `ParamSet`
+    /// assumes the type-outlives obligations registered while normalizing signature WF.
+    fn bevy_param_set_implied_bounds(&mut self, mut ty: Ty<'db>, pairs: &mut Vec<(Rv, Rv)>) {
+        use hir_ty::next_solver::{
+            infer::traits::ObligationCause, obligation_ctxt::ObligationCtxt,
+        };
+        use rustc_type_ir::Upcast as _;
+
+        while let TyKind::Ref(_, inner, _) = ty.kind() {
+            ty = inner;
+        }
+        let TyKind::Adt(def, _) = ty.kind() else { return };
+        let db = self.ctx.db;
+        let adt = def.def_id();
+        let name = match adt {
+            AdtId::StructId(id) => &hir_def::signatures::StructSignature::of(db, id).name,
+            AdtId::EnumId(id) => &hir_def::signatures::EnumSignature::of(db, id).name,
+            AdtId::UnionId(id) => &hir_def::signatures::UnionSignature::of(db, id).name,
+        };
+        if name.as_str() != "ParamSet"
+            || !adt
+                .krate(db)
+                .extra_data(db)
+                .display_name
+                .as_ref()
+                .is_some_and(|name| name.as_str() == "bevy_ecs")
+        {
+            return;
+        }
+        let interner = self.interner();
+        let mut clauses: Vec<Clause<'db>> = Vec::new();
+        for arg in ty.walk() {
+            let Some(it) = rustc_type_ir::inherent::GenericArg::as_type(&arg) else { continue };
+            // The flat walk exposes types below binders, whose clauses cannot become free.
+            if rustc_type_ir::TypeVisitableExt::has_escaping_bound_vars(&it) {
+                continue;
+            }
+            let TyKind::Adt(def, args) = it.kind() else { continue };
+            clauses.extend(
+                GenericPredicates::query_all(db, def.def_id().into())
+                    .iter_instantiated(interner, args.as_slice())
+                    .map(|it| it.skip_norm_wip()),
+            );
+            for predicate in self.inferred.of(db, def.def_id()) {
+                let OutlivesPredicate(arg, region) = rustc_type_ir::EarlyBinder::bind(predicate)
+                    .instantiate(interner, args)
+                    .skip_norm_wip();
+                clauses.push(match arg.kind() {
+                    GenericArgKind::Type(ty) => OutlivesPredicate(ty, region).upcast(interner),
+                    GenericArgKind::Lifetime(longer) => {
+                        OutlivesPredicate(longer, region).upcast(interner)
+                    }
+                    GenericArgKind::Const(_) => continue,
+                });
+            }
+        }
+        let infcx = &self.ctx.infcx;
+        let first_new = infcx.num_region_vars();
+        let implied = infcx.probe(|_| {
+            let before = infcx.inner.borrow_mut().region_obligations().len();
+            let ocx = ObligationCtxt::new(infcx);
+            for clause in clauses {
+                if rustc_type_ir::TypeVisitableExt::has_escaping_bound_vars(&clause) {
+                    continue;
+                }
+                ocx.deeply_normalize(&ObligationCause::dummy(), self.ctx.env, clause).ok()?;
+            }
+            let obligations: Vec<_> = infcx.inner.borrow_mut().region_obligations()[before..]
+                .iter()
+                .map(|it| (it.sup_type, it.sub_region))
+                .collect();
+            let obligations: Vec<_> = obligations
+                .into_iter()
+                .map(|(ty, region)| (infcx.resolve_vars_if_possible(ty), region))
+                .collect();
+            let mut inner = infcx.inner.borrow_mut();
+            let mut constraints = inner.unwrap_region_constraints();
+            Some(
+                obligations
+                    .into_iter()
+                    .filter_map(|obligation| {
+                        let mut valid = true;
+                        let (ty, region) =
+                            rustc_type_ir::fold_regions(interner, obligation, |mut region, _| {
+                                if let RegionKind::ReVar(vid) = region.kind()
+                                    && vid.index() >= first_new
+                                {
+                                    region = constraints.opportunistic_resolve_var(interner, vid);
+                                }
+                                valid &= match region.kind() {
+                                    RegionKind::ReVar(vid) => vid.index() < first_new,
+                                    RegionKind::ReStatic => true,
+                                    _ => false,
+                                };
+                                region
+                            });
+                        valid.then(|| OutlivesPredicate(ty, region).upcast(interner))
+                    })
+                    .collect(),
+            )
+        });
+        if let Some(clauses) = implied {
+            self.implied_by_clauses(clauses, pairs);
+        }
     }
 
     /// The self type of the impl `function` is in with its anonymous lifetimes universal
