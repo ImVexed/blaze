@@ -5198,6 +5198,11 @@ impl<'db> Builder<'_, '_, 'db> {
                 continue;
             }
             let base = self.place_ty(local, &projection[..index]).ty;
+            let base = if matches!(base.kind(), TyKind::Alias(_)) {
+                self.normalize_at(base, at).unwrap_or(base)
+            } else {
+                base
+            };
             match base.kind() {
                 TyKind::Ref(region, _, mutability) => {
                     if let Some(region) = rv_of(region) {

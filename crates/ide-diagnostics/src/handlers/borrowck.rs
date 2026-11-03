@@ -424,6 +424,104 @@ impl<W: B<C = C> + ?Sized, C> B for &mut W {
         );
     }
 
+    #[test]
+    fn a_projected_shared_fetch_outlives_the_mutable_borrow_of_it() {
+        check_diagnostics(
+            r#"
+//- minicore: sized, copy
+enum Maybe<T> { Present(T), Absent }
+trait Data {
+    type State;
+    type Fetch<'world>;
+    type Item<'world, 'state>;
+    fn fetch<'world, 'state>(
+        state: &'state Self::State,
+        fetch: &mut Self::Fetch<'world>,
+    ) -> Maybe<Self::Item<'world, 'state>>;
+}
+struct World;
+impl Data for World {
+    type State = u32;
+    type Fetch<'world> = &'world u32;
+    type Item<'world, 'state> = &'world u32;
+    fn fetch<'world, 'state>(
+        _: &'state Self::State,
+        fetch: &mut Self::Fetch<'world>,
+    ) -> Maybe<Self::Item<'world, 'state>> {
+        Maybe::Present(*fetch)
+    }
+}
+struct Optional<D>(*const D);
+impl<D: Data> Data for Optional<D> {
+    type State = D::State;
+    type Fetch<'world> = Maybe<D::Fetch<'world>>;
+    type Item<'world, 'state> = Maybe<D::Item<'world, 'state>>;
+    fn fetch<'world, 'state>(
+        state: &'state Self::State,
+        fetch: &mut Self::Fetch<'world>,
+    ) -> Maybe<Self::Item<'world, 'state>> {
+        match fetch {
+            Maybe::Present(inner) => Maybe::Present(D::fetch(state, inner)),
+            Maybe::Absent => Maybe::Present(Maybe::Absent),
+        }
+    }
+}
+struct Fetch<'world> { field: <Optional<World> as Data>::Fetch<'world> }
+struct Item<'world, 'state> { field: <Optional<World> as Data>::Item<'world, 'state> }
+fn fetch_item<'world, 'state>(
+    state: &'state <Optional<World> as Data>::State,
+    fetch: &mut Fetch<'world>,
+) -> Maybe<Item<'world, 'state>> {
+    let field = match Optional::<World>::fetch(state, &mut fetch.field) {
+        Maybe::Present(field) => field,
+        Maybe::Absent => return Maybe::Absent,
+    };
+    Maybe::Present(Item { field })
+}
+fn keep_world<'world>(world: &'world u32) -> Maybe<&'world u32> {
+    let state = 0;
+    let mut fetch = Fetch { field: Maybe::Present(world) };
+    match fetch_item(&state, &mut fetch) {
+        Maybe::Present(item) => item.field,
+        Maybe::Absent => Maybe::Absent,
+    }
+}
+"#,
+        );
+    }
+
+    #[test]
+    fn a_shared_projected_item_field_can_be_reborrowed_and_shortened() {
+        check_diagnostics(
+            r#"
+//- minicore: sized, copy
+trait Data {
+    type ReadOnly: Data;
+    type Item<'world>;
+}
+struct Read;
+impl Data for Read {
+    type ReadOnly = Self;
+    type Item<'world> = &'world u32;
+}
+struct Write;
+impl Data for Write {
+    type ReadOnly = Read;
+    type Item<'world> = &'world mut u32;
+}
+struct Item<'world> { field: <<Write as Data>::ReadOnly as Data>::Item<'world> }
+fn shrink<'long: 'short, 'short>(item: Item<'long>) -> Item<'short> {
+    Item { field: &*item.field }
+}
+fn bad<'world>() -> <Read as Data>::Item<'world> {
+    let local = 0;
+    &local
+  //^^^^^^ error: cannot return reference to local variable
+}
+"#,
+        );
+    }
+
     // biome's `markup!`: a value with no destructor and no interior mutability is promoted,
     // whatever its type.
     #[test]
