@@ -85,6 +85,19 @@ CASES = {
     "moved": {
         "src/main.rs": ALLOW + "fn main() {\n    let s = String::new();\n    let t = s;\n    let u = s;\n}\n",
     },
+    # Cross-package module paths must load their nested siblings into the checker's scope.
+    "cross_package_module_paths": {
+        "Cargo.toml": "[package]\nname=\"probe\"\nversion=\"0.1.0\"\nedition=\"2021\"\n[lib]\npath=\"server/tests/benchmark_loadouts.rs\"\n[dependencies]\nshared={path=\"shared\"}\n[workspace]\nmembers=[\"shared\"]\n",
+        "server/tests/benchmark_loadouts.rs": "#[path = \"support/expected_case_inputs.rs\"]\nmod expected_case_inputs;\npub fn value() -> u32 { expected_case_inputs::late() }\n",
+        "server/tests/support/expected_case_inputs.rs": "use shared::*;\n#[path = \"../../../shared/content/model/tests/expected_case_population.rs\"]\nmod population;\n#[path = \"../../../shared/content/model/tests/expected_case_rare_tempo.rs\"]\nmod rare_tempo;\n#[path = \"../../../shared/content/model/tests/expected_case_rng.rs\"]\nmod rng;\npub fn late() -> u32 { BASE + population::value() + rare_tempo::value() + rng::value() }\n",
+        "shared/Cargo.toml": "[package]\nname=\"shared\"\nversion=\"0.1.0\"\nedition=\"2021\"\n[lib]\npath=\"lib.rs\"\n",
+        "shared/lib.rs": "#[path = \"content/model/tests/expected_case_population.rs\"]\npub mod population;\npub const BASE: u32 = 40;\n",
+        "shared/content/model/tests/expected_case_population.rs": "#[path = \"expected_case_population_counts.rs\"]\nmod counts;\npub fn value() -> u32 { counts::VALUE }\n",
+        "shared/content/model/tests/expected_case_population_counts.rs": "pub const VALUE: u32 = 1;\n",
+        "shared/content/model/tests/expected_case_rare_tempo.rs": "pub fn value() -> u32 { 1 }\n",
+        "shared/content/model/tests/expected_case_rng.rs": "pub fn value() -> u32 { 0 }\n",
+        "shared/content/model/tests/expected_case_alternate_rng.rs": "pub fn value() -> u32 { 0 }\n",
+    },
     # Nothing wrong.
     "fine": {
         "src/main.rs": ALLOW + "fn main() {\n    let _ = 1;\n}\n",
@@ -185,10 +198,10 @@ def make(work, name, files):
     return at
 
 
-def run(at, command, fmt, home):
+def run(at, command, fmt, home, timeout=600):
     """stdout's JSON messages, stderr's lines and the status of `COMMAND check` (cargo's with none)."""
     args = [*(command or ["cargo"]), "check", f"--message-format={fmt}"]
-    done = subprocess.run(args, cwd=at, env=env(home), capture_output=True, text=True, timeout=600, check=False)
+    done = subprocess.run(args, cwd=at, env=env(home), capture_output=True, text=True, timeout=timeout, check=False)
     messages = [json.loads(line) for line in done.stdout.splitlines() if line.startswith("{")]
     return messages, done.stderr.splitlines(), done.returncode
 
@@ -314,10 +327,75 @@ def compare_text(tally, case, fmt, ours, theirs):
     tally.same(case, fmt, "notes and could not compile", tail(ours), tail(theirs))
 
 
+def compare_run(tally, name, fmt, at, home):
+    theirs, their_err, their_status = run(at, [], fmt, home)
+    ours, our_err, our_status = run(at, ["blaze"], fmt, home)
+    tally.same(name, fmt, "status", our_status, their_status)
+    if our_status != their_status and our_err:
+        print(f"{name} {fmt}: blaze exited {our_status}: {our_err[-1]}", flush=True)
+    tally.same(name, fmt, "checked without rustc", [l for l in our_err if "Checking probe" in l], [])
+    if fmt.startswith("json"):
+        compare_json(tally, name, fmt, ours, theirs)
+        tally.same(name, fmt, "could not compile", [l for l in our_err if "could not compile" in l], [l for l in their_err if "could not compile" in l])
+    else:
+        compare_text(tally, name, fmt, our_err, their_err)
+
+
+def module_contract(step, at, home, expected, missing=False):
+    for compiler, command in (("cargo", []), ("blaze", ["blaze"])):
+        messages, stderr, status = run(at, command, "json", home, timeout=30)
+        assert status == expected, (step, compiler, status, stderr)
+        errors = [m["message"] for m in messages
+                  if m.get("reason") == "compiler-message" and m["message"]["level"] == "error"]
+        finished = [m["success"] for m in messages if m.get("reason") == "build-finished"]
+        assert finished == [expected == 0], (step, compiler, finished)
+        if expected == 0:
+            assert not errors, (step, compiler, errors)
+            continue
+        assert len(errors) == 1, (step, compiler, errors)
+        diagnostic = errors[0]
+        span = primary(diagnostic)
+        assert diagnostic.get("$message_type") == "diagnostic" and span and span["is_primary"], diagnostic
+        code = diagnostic["code"] and diagnostic["code"]["code"]
+        if missing:
+            wanted_code, line, column = ("E0583", 6, 1) if compiler == "blaze" else (None, 7, 1)
+            source = Path(at, "server/tests/support/expected_case_inputs.rs")
+            assert "genuinely_missing_rng.rs" in diagnostic["message"], (step, compiler, diagnostic)
+        else:
+            wanted_code, line, column = "E0308", 1, 25
+            source = Path(at, "shared/content/model/tests/expected_case_alternate_rng.rs")
+        observed = code, Path(at, span["file_name"]).resolve(), span["line_start"], span["column_start"]
+        assert observed == (wanted_code, source.resolve(), line, column), (step, compiler, observed)
+    print(f"  module lifecycle {step}: cargo/blaze status {expected}", flush=True)
+
+
+def module_path_edits(at, home):
+    inputs = Path(at, "server/tests/support/expected_case_inputs.rs")
+    alternate = Path(at, "shared/content/model/tests/expected_case_alternate_rng.rs")
+    original, valid = inputs.read_text(), alternate.read_text()
+    retarget = original.replace("expected_case_rng.rs", "expected_case_alternate_rng.rs")
+    assert retarget != original
+    try:
+        inputs.write_text(retarget)
+        module_contract("retarget", at, home, 0)
+        alternate.write_text('pub fn value() -> u32 { "wrong" }\n')
+        module_contract("retargeted body error", at, home, 101)
+        alternate.write_text(valid)
+        module_contract("retargeted body restored", at, home, 0)
+        inputs.write_text(original.replace("expected_case_rng.rs", "genuinely_missing_rng.rs"))
+        module_contract("missing warm", at, home, 101, missing=True)
+        subprocess.run([BLAZE, "stop"], env=env(home), capture_output=True, check=True, timeout=10)
+        module_contract("missing cold", at, home, 101, missing=True)
+    finally:
+        inputs.write_text(original)
+        alternate.write_text(valid)
+    print("  module lifecycle: 5/5 semantic contracts passed; rendered parity is checked separately", flush=True)
+
+
 Case = Literal[
     "two_codes", "one_code_twice", "tab_and_wide_chars", "lib_module", "calls", "moved", "fine",
     "dyn_associated_type_outlives", "nested_projection_outlives", "promoted_enum_array",
-    "unpromoted_enum_array", "static_supertrait_object",
+    "unpromoted_enum_array", "static_supertrait_object", "cross_package_module_paths",
 ]
 
 
@@ -346,17 +424,9 @@ def main():
         for name, files in cases.items():
             at = make(work, name, files)
             for fmt in FORMATS:
-                theirs, their_err, their_status = run(at, [], fmt, home)
-                ours, our_err, our_status = run(at, ["blaze"], fmt, home)
-                tally.same(name, fmt, "status", our_status, their_status)
-                if our_status != their_status and our_err:
-                    print(f"{name} {fmt}: blaze exited {our_status}: {our_err[-1]}", flush=True)
-                tally.same(name, fmt, "checked without rustc", [l for l in our_err if "Checking probe" in l], [])
-                if fmt.startswith("json"):
-                    compare_json(tally, name, fmt, ours, theirs)
-                    tally.same(name, fmt, "could not compile", [l for l in our_err if "could not compile" in l], [l for l in their_err if "could not compile" in l])
-                else:
-                    compare_text(tally, name, fmt, our_err, their_err)
+                compare_run(tally, name, fmt, at, home)
+            if name == "cross_package_module_paths":
+                module_path_edits(at, home)
             print(f"{name}: done", flush=True)
     finally:
         subprocess.run([BLAZE, "stop"], env=env(home), capture_output=True, check=False)

@@ -23,6 +23,29 @@ use vfs::Vfs;
 
 use crate::{Args, Parts, Sources, Watched, WatchedFile};
 
+/// Loads files named by modules and include macros before the checker's source snapshot.
+fn module_sources(
+    db: &mut RootDatabase,
+    vfs: Vfs,
+    members: &FxHashSet<ide_db::base_db::Crate>,
+) -> crate::tree::Tree {
+    let mut tree = crate::tree::Tree::new(db, vfs, &[]);
+    loop {
+        hir::attach_db(db, || {
+            for &member in members {
+                let krate = hir::Crate::from(member);
+                if krate.origin(db).is_local() {
+                    let _ = krate.modules(db);
+                }
+            }
+        });
+        if tree.included(db).is_empty() {
+            return tree;
+        }
+        crate::prepare_macro_sessions(db);
+    }
+}
+
 /// Loads the workspace of `args` and answers the check requests on its socket.
 pub(crate) fn serve(args: Args) -> anyhow::Result<()> {
     let socket = args.socket.clone().context("--check needs --socket")?;
@@ -38,7 +61,9 @@ pub(crate) fn serve(args: Args) -> anyhow::Result<()> {
     ide_db::base_db::set_process_env(&mut db, crate::process::own());
     crate::prepare_macro_sessions(&db);
     let Parts { root, members, lints_capped, .. } = checkouts.parts(&args.project)?;
-    let mut checker = Checker::new(&db, &vfs, &checkouts, &members, read_from, root, lints_capped);
+    let mut tree = module_sources(&mut db, vfs, &members);
+    let mut checker =
+        Checker::new(&db, tree.vfs(), &checkouts, &members, read_from, root, lints_capped);
     crate::events::idle();
     let served = match crate::socket::Served::bind(&socket) {
         Ok(served) => served,
@@ -66,7 +91,12 @@ pub(crate) fn serve(args: Args) -> anyhow::Result<()> {
                 );
                 let answer = checker.answer(&db, &args, &request);
                 crate::events::idle();
-                answer
+                if tree.includes_more(&db) {
+                    eprintln!("{RELOAD}: a module names a source file not yet loaded");
+                    RELOAD.to_owned()
+                } else {
+                    answer
+                }
             }
         };
         let _ = std::io::Write::write_all(&mut &stream, format!("{reply}\n").as_bytes());
@@ -111,7 +141,9 @@ pub(crate) fn once(project: &Path, krate: &str) -> anyhow::Result<Option<crate::
         eprintln!("probe: def maps of {} crates from the store", served.def_maps());
     }
     let Parts { root, members, lints_capped, .. } = checkouts.parts(&args.project)?;
-    let checker = Checker::new(&db, &vfs, &checkouts, &members, read_from, root, lints_capped);
+    let mut tree = module_sources(&mut db, vfs, &members);
+    let checker =
+        Checker::new(&db, tree.vfs(), &checkouts, &members, read_from, root, lints_capped);
     // A probe's `rust-project.json` has no cargo targets to pick from: its crates are checked.
     let scope = checker.scope(None)?;
     if let Some(refused) = checker.refused(&db, &scope) {
