@@ -188,6 +188,8 @@ impl Picked {
         // load has it.
         let test =
             test && matches!(kind, TargetKind::Lib { is_proc_macro: false } | TargetKind::Bin);
+        // Cargo keeps parent components, while VFS crate roots are normalized.
+        let root = paths::AbsPathBuf::assert_utf8(root).normalize().into();
         Picked { root, kind, test }
     }
 }
@@ -308,16 +310,17 @@ impl Checker {
                 manifests.insert(cargo[package].manifest.to_path_buf().into());
                 for &target in &cargo[package].targets {
                     let target = &cargo[target];
-                    local_roots.insert(PathBuf::from(target.root.clone()));
+                    let root: PathBuf = target.root.normalize().into();
+                    local_roots.insert(root.clone());
                     let runs = matches!(
                         target.kind,
                         TargetKind::BuildScript | TargetKind::Lib { is_proc_macro: true }
                     );
                     if runs {
-                        ran_roots.insert(PathBuf::from(target.root.clone()));
+                        ran_roots.insert(root.clone());
                     }
                     if target.kind == TargetKind::BuildScript {
-                        script_roots.insert(PathBuf::from(target.root.clone()));
+                        script_roots.insert(root);
                     }
                 }
             }

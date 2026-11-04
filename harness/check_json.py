@@ -105,6 +105,15 @@ CASES = {
         'dep/Cargo.toml': '[package]\nname="dep"\nversion="0.1.0"\nedition="2024"\n[features]\ntext=[]\n',
         'dep/src/lib.rs': '#[cfg(not(feature="text"))]\npub fn value() -> u32 { 1 }\n#[cfg(feature="text")]\npub fn value() -> &\'static str { "changed" }\n',
     },
+    # Cargo retains the parent-relative bin root; its unit tests must stay in scope.
+    "parent_relative_bin_test": {
+        "Cargo.toml": '[workspace]\nmembers=["server", "shared"]\nresolver="2"\n',
+        "server/Cargo.toml": '[package]\nname="probe"\nversion="0.1.0"\nedition="2021"\n[features]\ntooling=[]\n[[bin]]\nname="project_gem_rows"\npath="../shared/examples/gem_rows.rs"\n[dependencies]\nshared={path="../shared"}\n',
+        "server/src/lib.rs": "pub fn baseline() -> u32 { shared::VALUE }\n",
+        "shared/Cargo.toml": '[package]\nname="shared"\nversion="0.1.0"\nedition="2021"\n',
+        "shared/src/lib.rs": "pub const VALUE: u32 = 1;\n",
+        "shared/examples/gem_rows.rs": "fn main() {}\n#[cfg(test)]\n#[test]\nfn alias_test() { let _: u32 = 1; }\n",
+    },
     # A dependency signature edit must invalidate an unchanged caller's clean body.
     "warm_dependency_change": {
         "src/lib.rs": "mod dep;\npub fn caller() { let _: u32 = dep::value(); }\n",
@@ -218,9 +227,9 @@ def make(work, name, files):
     return at
 
 
-def run(at, command, fmt, home, timeout=600):
+def run(at, command, fmt, home, timeout=600, targets=()):
     """stdout's JSON messages, stderr's lines and the status of `COMMAND check` (cargo's with none)."""
-    args = [*(command or ["cargo"]), "check", f"--message-format={fmt}"]
+    args = [*(command or ["cargo"]), "check", f"--message-format={fmt}", *targets]
     done = subprocess.run(args, cwd=at, env=env(home), capture_output=True, text=True, timeout=timeout, check=False)
     messages = [json.loads(line) for line in done.stdout.splitlines() if line.startswith("{")]
     return messages, done.stderr.splitlines(), done.returncode
@@ -347,9 +356,9 @@ def compare_text(tally, case, fmt, ours, theirs):
     tally.same(case, fmt, "notes and could not compile", tail(ours), tail(theirs))
 
 
-def compare_run(tally, name, fmt, at, home):
-    theirs, their_err, their_status = run(at, [], fmt, home)
-    ours, our_err, our_status = run(at, ["blaze"], fmt, home)
+def compare_run(tally, name, fmt, at, home, targets=()):
+    theirs, their_err, their_status = run(at, [], fmt, home, targets=targets)
+    ours, our_err, our_status = run(at, ["blaze"], fmt, home, targets=targets)
     tally.same(name, fmt, "status", our_status, their_status)
     if our_status != their_status and our_err:
         print(f"{name} {fmt}: blaze exited {our_status}: {our_err[-1]}", flush=True)
@@ -444,6 +453,23 @@ def workspace_manifest_edits(tally, at, home):
         manifest.write_text(original)
 
 
+def target_alias_edits(tally, at, home, targets):
+    source = Path(at, "shared/examples/gem_rows.rs")
+    original = source.read_text()
+    invalid = original.replace("let _: u32 = 1;", 'let _: u32 = "wrong";')
+    assert invalid != original
+    try:
+        for step, text, expected in (("test error", invalid, 101), ("restored", original, 0)):
+            source.write_text(text)
+            messages, stderr, status = compare_run(tally, "parent_relative_bin_test " + step, "json", at, home, targets)
+            assert status == expected, (step, status, stderr)
+            errors = [m["message"] for m in messages
+                      if m.get("reason") == "compiler-message" and m["message"]["level"] == "error"]
+            assert [m["code"]["code"] for m in errors] == (["E0308"] if expected else []), (step, errors)
+    finally:
+        source.write_text(original)
+
+
 def dependency_edits(tally, name, at, home):
     dep = Path(at, "src/dep.rs")
     original = dep.read_text()
@@ -468,7 +494,7 @@ Case = Literal[
     "dyn_associated_type_outlives", "nested_projection_outlives", "promoted_enum_array",
     "unpromoted_enum_array", "static_supertrait_object", "cross_package_module_paths",
     "warm_dependency_change", "warm_dependency_change_local_const", "warm_dependency_macro_span",
-    "warm_workspace_root_features",
+    "warm_workspace_root_features", "parent_relative_bin_test",
 ]
 
 
@@ -496,8 +522,15 @@ def main():
     try:
         for name, files in cases.items():
             at = make(work, name, files)
+            targets = ("--locked", "-p", "probe", "--features", "tooling", "--lib", "--tests") if name == "parent_relative_bin_test" else ()
+            if name == "parent_relative_bin_test":
+                subprocess.run(["cargo", "generate-lockfile", "--offline"], cwd=at, env=env(home), check=True, capture_output=True, timeout=10)
             for fmt in FORMATS:
-                compare_run(tally, name, fmt, at, home)
+                _, stderr, status = compare_run(tally, name, fmt, at, home, targets)
+                if name == "parent_relative_bin_test":
+                    assert status == 0, (fmt, status, stderr)
+            if name == "parent_relative_bin_test":
+                target_alias_edits(tally, at, home, targets)
             if name == "cross_package_module_paths":
                 module_path_edits(at, home)
             if name == "warm_workspace_root_features":
