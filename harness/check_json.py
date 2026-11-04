@@ -98,6 +98,13 @@ CASES = {
         "shared/content/model/tests/expected_case_rng.rs": "pub fn value() -> u32 { 0 }\n",
         "shared/content/model/tests/expected_case_alternate_rng.rs": "pub fn value() -> u32 { 0 }\n",
     },
+    "warm_workspace_root_features": {
+        'Cargo.toml': '[workspace]\nmembers = ["app", "dep"]\nresolver = "2"\n\n[workspace.dependencies]\ndep = { path = "dep", default-features = false, features = [] }\n',
+        'app/Cargo.toml': '[package]\nname="ws_manifest_app"\nversion="0.1.0"\nedition="2024"\n[dependencies]\ndep.workspace=true\n',
+        'app/src/lib.rs': 'pub fn caller() { let _: u32 = dep::value(); }\n',
+        'dep/Cargo.toml': '[package]\nname="dep"\nversion="0.1.0"\nedition="2024"\n[features]\ntext=[]\n',
+        'dep/src/lib.rs': '#[cfg(not(feature="text"))]\npub fn value() -> u32 { 1 }\n#[cfg(feature="text")]\npub fn value() -> &\'static str { "changed" }\n',
+    },
     # A dependency signature edit must invalidate an unchanged caller's clean body.
     "warm_dependency_change": {
         "src/lib.rs": "mod dep;\npub fn caller() { let _: u32 = dep::value(); }\n",
@@ -352,6 +359,7 @@ def compare_run(tally, name, fmt, at, home):
         tally.same(name, fmt, "could not compile", [l for l in our_err if "could not compile" in l], [l for l in their_err if "could not compile" in l])
     else:
         compare_text(tally, name, fmt, our_err, their_err)
+    return ours, our_err, our_status
 
 
 def module_contract(step, at, home, expected, missing=False):
@@ -405,6 +413,37 @@ def module_path_edits(at, home):
     print("  module lifecycle: 5/5 semantic contracts passed; rendered parity is checked separately", flush=True)
 
 
+def workspace_manifest_edits(tally, at, home):
+    manifest = Path(at, "Cargo.toml")
+    original = manifest.read_text()
+    changed = original.replace("features = []", 'features = ["text"]')
+    assert changed != original
+    stable = {path: Path(at, path).read_bytes() for path in (*CASES["warm_workspace_root_features"], "Cargo.lock")
+              if path != "Cargo.toml"}
+    messages, stderr, status = compare_run(tally, "warm_workspace_root_features baseline", "json", at, home)
+    assert status == 0 and [m["success"] for m in messages if m.get("reason") == "build-finished"] == [True], (status, stderr)
+    generations = lambda: {path.name for path in Path(home).glob("checkers/*/events.*")}
+    before = generations()
+    assert before, "baseline checker was not created"
+    try:
+        for step, text, expected in (("features changed", changed, 101), ("restored", original, 0)):
+            manifest.write_text(text)
+            assert all(Path(at, path).read_bytes() == data for path, data in stable.items())
+            messages, stderr, status = compare_run(tally, "warm_workspace_root_features " + step, "json", at, home)
+            assert status == expected, (step, status, stderr)
+            errors = [m["message"] for m in messages
+                      if m.get("reason") == "compiler-message" and m["message"]["level"] == "error"]
+            finished = [m["success"] for m in messages if m.get("reason") == "build-finished"]
+            assert finished == [expected == 0], (step, finished)
+            assert [m["code"]["code"] for m in errors] == (["E0308"] if expected else []), (step, errors)
+            after = generations()
+            assert after - before, (step, "changed root manifest did not replace the checker")
+            before = after
+            assert all(Path(at, path).read_bytes() == data for path, data in stable.items())
+    finally:
+        manifest.write_text(original)
+
+
 def dependency_edits(tally, name, at, home):
     dep = Path(at, "src/dep.rs")
     original = dep.read_text()
@@ -429,6 +468,7 @@ Case = Literal[
     "dyn_associated_type_outlives", "nested_projection_outlives", "promoted_enum_array",
     "unpromoted_enum_array", "static_supertrait_object", "cross_package_module_paths",
     "warm_dependency_change", "warm_dependency_change_local_const", "warm_dependency_macro_span",
+    "warm_workspace_root_features",
 ]
 
 
@@ -460,6 +500,8 @@ def main():
                 compare_run(tally, name, fmt, at, home)
             if name == "cross_package_module_paths":
                 module_path_edits(at, home)
+            if name == "warm_workspace_root_features":
+                workspace_manifest_edits(tally, at, home)
             if name.startswith("warm_dependency_"):
                 dependency_edits(tally, name, at, home)
             print(f"{name}: done", flush=True)

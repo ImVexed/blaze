@@ -301,7 +301,7 @@ impl Checker {
             let ProjectWorkspaceKind::Cargo { cargo, .. } = &workspace.kind else { continue };
             let root: &Path = cargo.workspace_root().as_ref();
             targets.push(PathBuf::from(cargo.target_directory().to_string()));
-            for file in ["Cargo.lock", ".cargo/config.toml", ".cargo/config"] {
+            for file in ["Cargo.toml", "Cargo.lock", ".cargo/config.toml", ".cargo/config"] {
                 manifests.insert(root.join(file));
             }
             for package in cargo.packages().filter(|it| cargo[*it].is_local) {
