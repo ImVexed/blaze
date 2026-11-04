@@ -6479,6 +6479,28 @@ fn broken_in(
     within: Option<Arc<FxHashSet<ide_db::base_db::Crate>>>,
     lints: bool,
 ) -> Option<errors::Said> {
+    broken_in_with(db, edited, watched, root, within, lints, errors_of)
+}
+
+type FileErrors = Vec<(ide_db::FileRange, &'static str, String)>;
+type FileCheck = fn(
+    &RootDatabase,
+    &ide_diagnostics::DiagnosticsConfig,
+    vfs::FileId,
+    Option<Arc<FxHashSet<ide_db::base_db::Crate>>>,
+    (bool, bool),
+) -> FileErrors;
+
+/// The shared check and rendering path; only the CHECK daemon memoizes a complete file result.
+fn broken_in_with(
+    db: &RootDatabase,
+    edited: &[vfs::FileId],
+    watched: &Sources,
+    root: &Path,
+    within: Option<Arc<FxHashSet<ide_db::base_db::Crate>>>,
+    lints: bool,
+    errors_of: FileCheck,
+) -> Option<errors::Said> {
     let threads = std::thread::available_parallelism().map_or(1, |it| it.get());
     let config = ide_diagnostics::DiagnosticsConfig::test_sample();
     let refuse_borrowck = std::env::var_os("BLAZE_BORROWCK_REFUSE").is_none_or(|it| it != "0");
@@ -6613,29 +6635,17 @@ fn errors_of(
         asked_of.set((n + usize::from(asked), of + 1));
         asked
     };
-    let found: Vec<_> = ide_diagnostics::semantic_diagnostics_of_bodies(
-        db,
-        config,
-        &ide_db::assists::AssistResolveStrategy::None,
-        file,
-        within,
-        &asked,
-    )
-    .into_iter()
-    .filter(|it| {
-        let code = it.code.as_str();
-        // rustc says nothing of most lints in what another crate's macro expands to.
-        let expanded = it.main_node.is_some_and(|it| it.file_id.is_macro());
-        it.severity == ide_db::Severity::Error
-            && (SURE.contains(&code)
-                || refuse_borrowck && BORROWCK.contains(&code)
-                || lints
-                    && !expanded
-                    && (DENIED.contains(&code)
-                        || refuse_borrowck && DENIED_BORROWCK.contains(&code)))
-    })
-    .map(|it| (it.range, it.code.as_str(), it.message))
-    .collect();
+    let found = refused_file_errors(
+        ide_diagnostics::semantic_diagnostics_of_bodies(
+            db,
+            config,
+            &ide_db::assists::AssistResolveStrategy::None,
+            file,
+            within,
+            &asked,
+        ),
+        (lints, refuse_borrowck),
+    );
     if std::env::var_os("BLAZE_STATS").is_some() {
         let (n, of) = asked_of.get();
         eprintln!("check: {file:?}: the bodies of {n} of {of} functions asked");
@@ -6644,6 +6654,29 @@ fn errors_of(
         lock(&CLEAN).insert(key, Clean { skeleton, functions: functions.into_inner() });
     }
     found
+}
+
+/// The diagnostic policy shared by incremental builds and the CHECK daemon's tracked result.
+fn refused_file_errors(
+    diagnostics: Vec<ide_diagnostics::Diagnostic>,
+    (lints, refuse_borrowck): (bool, bool),
+) -> FileErrors {
+    diagnostics
+        .into_iter()
+        .filter(|it| {
+            let code = it.code.as_str();
+            // rustc says nothing of most lints in what another crate's macro expands to.
+            let expanded = it.main_node.is_some_and(|it| it.file_id.is_macro());
+            it.severity == ide_db::Severity::Error
+                && (SURE.contains(&code)
+                    || refuse_borrowck && BORROWCK.contains(&code)
+                    || lints
+                        && !expanded
+                        && (DENIED.contains(&code)
+                            || refuse_borrowck && DENIED_BORROWCK.contains(&code)))
+        })
+        .map(|it| (it.range, it.code.as_str(), it.message))
+        .collect()
 }
 
 /// The text of the source file at `path` as the database has it.

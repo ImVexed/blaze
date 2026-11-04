@@ -3,6 +3,8 @@
 //! each request on its socket is answered with what rust-analyzer finds in the crates of the
 //! workspace, as a build says its errors. No rustc checks the source.
 
+mod diagnostics;
+
 pub(crate) use blaze_cargo::check::{LINT, RELOAD};
 
 use std::{
@@ -523,13 +525,14 @@ impl Checker {
 
     /// The errors in the source of `scope`, `None` when it compiles.
     fn refused(&self, db: &RootDatabase, scope: &Scope) -> Option<crate::Refused> {
-        let broken = crate::broken_in(
+        let broken = crate::broken_in_with(
             db,
             &scope.checked,
             &self.sources,
             &self.root,
             Some(scope.within.clone()),
             !self.lints_capped,
+            diagnostics::errors_of,
         );
         hir::attach_db(db, || {
             crate::refusal(db, &scope.checked, &self.sources, &self.root, broken, None)
