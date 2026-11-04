@@ -1782,7 +1782,7 @@ impl<'a, 'db> DiagnosticsCollector<'a, 'db> {
 impl<'db> AnyDiagnostic<'db> {
     fn body_validation_diagnostic(
         db: &'db dyn HirDatabase,
-        diagnostic: BodyValidationDiagnostic<'db>,
+        diagnostic: BodyValidationDiagnostic,
         source_map: &hir_def::expr_store::BodySourceMap,
     ) -> Option<AnyDiagnostic<'db>> {
         match diagnostic {
@@ -1903,7 +1903,8 @@ impl<'db> AnyDiagnostic<'db> {
                     );
                 }
             }
-            BodyValidationDiagnostic::UnusedMustUse { expr, message } => {
+            BodyValidationDiagnostic::UnusedMustUse { expr, owner } => {
+                let message = AttrFlags::must_use_message(db, owner)?;
                 if let Ok(source_ptr) = source_map.expr_syntax(expr) {
                     return Some(UnusedMustUse { expr: source_ptr, message }.into());
                 }

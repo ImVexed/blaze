@@ -516,6 +516,7 @@ impl MacroCallId {
         ExpandResult { value: (parse, rev_token_map), err }
     }
 
+    #[salsa::tracked(returns(clone))]
     pub fn parse_macro_expansion_error(
         self,
         db: &dyn SourceDatabase,

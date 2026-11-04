@@ -206,6 +206,46 @@ fn value() -> bool { true }
     }
 
     #[test]
+    fn file_result_tracks_cross_file_must_use_messages() {
+        let (mut db, files) = RootDatabase::with_many_files(
+            r#"
+//- /lib.rs crate:app deps:dep
+#![deny(unused_must_use)]
+pub fn caller() { dep::value(); }
+//- /dep.rs crate:dep
+#[must_use = "type"]
+pub struct Value;
+#[must_use = "first"]
+pub fn value() -> Value { Value }
+"#,
+        );
+        let [file, dep] = [0, 1].map(|it| files[it].file_id(&db));
+        let original = db.file_text(dep).text(&db).to_owned();
+        let first = checked(&db, file, None, (true, true));
+        assert_eq!(codes(&first), ["unused_must_use"]);
+        assert!(first[0].2.contains("first"));
+        db.set_file_text(dep, &original.replace("first", "second"));
+        let second = checked(&db, file, None, (true, true));
+        assert_eq!(codes(&second), ["unused_must_use"]);
+        assert_eq!(second[0].0, first[0].0);
+        assert_eq!(second[0].2, first[0].2.replace("first", "second"));
+        let fallback = original.replace(r#"#[must_use = "first"]"#, "");
+        db.set_file_text(dep, &fallback);
+        let from_type = checked(&db, file, None, (true, true));
+        assert_eq!(codes(&from_type), ["unused_must_use"]);
+        assert_eq!(from_type[0].2, first[0].2.replace("first", "type"));
+        let bare = original.replace(r#"#[must_use = "first"]"#, "#[must_use]");
+        db.set_file_text(dep, &bare);
+        let bare = checked(&db, file, None, (true, true));
+        assert_eq!(codes(&bare), ["unused_must_use"]);
+        assert_eq!(bare[0].2, first[0].2.strip_suffix(": first").unwrap());
+        db.set_file_text(dep, &fallback.replace(r#"#[must_use = "type"]"#, ""));
+        assert!(checked(&db, file, None, (true, true)).is_empty());
+        db.set_file_text(dep, &original);
+        assert_eq!(checked(&db, file, None, (true, true)), first);
+    }
+
+    #[test]
     fn file_result_keys_lint_and_borrow_refusal_rules() {
         let (db, file) = RootDatabase::with_single_file(
             r#"

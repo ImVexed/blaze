@@ -7,8 +7,8 @@ use std::fmt;
 use base_db::Crate;
 use either::Either;
 use hir_def::{
-    AdtId, AssocItemId, CallableDefId, DefWithBodyId, EnumVariantId, HasModule, ItemContainerId,
-    Lookup,
+    AdtId, AssocItemId, AttrDefId, CallableDefId, DefWithBodyId, EnumVariantId, HasModule,
+    ItemContainerId, Lookup,
     attrs::AttrFlags,
     expr_store::scope::ExprScopes,
     lang_item::LangItems,
@@ -48,7 +48,8 @@ pub(crate) use hir_def::{
     hir::{Expr, ExprId, MatchArm, Pat, PatId, RecordSpread, Statement},
 };
 
-pub enum BodyValidationDiagnostic<'db> {
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum BodyValidationDiagnostic {
     RecordMissingFields {
         record: Either<ExprId, PatId>,
         variant: VariantId,
@@ -73,35 +74,37 @@ pub enum BodyValidationDiagnostic<'db> {
     },
     UnusedMustUse {
         expr: ExprId,
-        message: Option<&'db str>,
+        // Resolve the selected attribute's borrowed message when mapping to source diagnostics.
+        owner: AttrDefId,
     },
 }
 
-impl<'db> BodyValidationDiagnostic<'db> {
+impl BodyValidationDiagnostic {
     pub fn collect(
-        db: &'db dyn HirDatabase,
+        db: &dyn HirDatabase,
         owner: DefWithBodyId,
         validate_lints: bool,
-    ) -> Vec<BodyValidationDiagnostic<'db>> {
-        let _p = tracing::info_span!("BodyValidationDiagnostic::collect").entered();
-        let infer = InferenceResult::of(db, owner);
-        let body = Body::of(db, owner);
-        let env = db.trait_environment(owner.generic_def(db));
-        let interner = DbInterner::new_with(db, owner.krate(db));
-        let infcx =
-            interner.infer_ctxt().build(TypingMode::typeck_for_body(interner, owner.into()));
-        let mut validator = ExprValidator {
-            owner,
-            body,
-            infer,
-            diagnostics: Vec::new(),
-            validate_lints,
-            env,
-            infcx,
-        };
-        validator.validate_body();
-        validator.diagnostics
+    ) -> Vec<BodyValidationDiagnostic> {
+        body_validation_diagnostics(db, owner, validate_lints)
     }
+}
+
+#[salsa::tracked(returns(clone))]
+fn body_validation_diagnostics(
+    db: &dyn HirDatabase,
+    owner: DefWithBodyId,
+    validate_lints: bool,
+) -> Vec<BodyValidationDiagnostic> {
+    let _p = tracing::info_span!("BodyValidationDiagnostic::collect").entered();
+    let infer = InferenceResult::of(db, owner);
+    let body = Body::of(db, owner);
+    let env = db.trait_environment(owner.generic_def(db));
+    let interner = DbInterner::new_with(db, owner.krate(db));
+    let infcx = interner.infer_ctxt().build(TypingMode::typeck_for_body(interner, owner.into()));
+    let mut validator =
+        ExprValidator { owner, body, infer, diagnostics: Vec::new(), validate_lints, env, infcx };
+    validator.validate_body();
+    validator.diagnostics
 }
 
 struct ExprValidator<'db> {
@@ -109,7 +112,7 @@ struct ExprValidator<'db> {
     body: &'db Body,
     infer: &'db InferenceResult<'db>,
     env: ParamEnv<'db>,
-    diagnostics: Vec<BodyValidationDiagnostic<'db>>,
+    diagnostics: Vec<BodyValidationDiagnostic>,
     validate_lints: bool,
     infcx: InferCtxt<'db>,
 }
@@ -345,7 +348,7 @@ impl<'db> ExprValidator<'db> {
         pattern_arena: &'a Arena<DeconstructedPat<'a, 'db>>,
         pat: PatId,
         initializer: Option<ExprId>,
-    ) -> Option<BodyValidationDiagnostic<'db>> {
+    ) -> Option<BodyValidationDiagnostic> {
         // Bail out if any subpattern has a type mismatch: the pattern isn't well-formed then, and
         // deconstructing it can produce constructors with mismatching arities, which the
         // usefulness analysis doesn't expect. `check_match` does the same for its arms.
@@ -409,11 +412,7 @@ impl<'db> ExprValidator<'db> {
         pattern
     }
 
-    fn check_unused_must_use(
-        &self,
-        mut expr: ExprId,
-        acc: &mut Vec<BodyValidationDiagnostic<'db>>,
-    ) {
+    fn check_unused_must_use(&self, mut expr: ExprId, acc: &mut Vec<BodyValidationDiagnostic>) {
         // As rustc's `UnusedResults`: the value of the statement, through the tails of
         // blocks (`unsafe` and labeled ones too) but not into `if`, `match` or `const`.
         while let Expr::Block { tail: Some(tail), .. } = &self.body[expr] {
@@ -442,8 +441,9 @@ impl<'db> ExprValidator<'db> {
             .and_then(|ty| self.must_use_adt(ty))
             .map(Into::into);
         let must_use_diag = |owner| {
-            AttrFlags::must_use_message(self.db(), owner?)
-                .map(|message| BodyValidationDiagnostic::UnusedMustUse { expr, message })
+            let owner = owner?;
+            AttrFlags::must_use_message(self.db(), owner)
+                .map(|_| BodyValidationDiagnostic::UnusedMustUse { expr, owner })
         };
         if let Some(diag) = must_use_diag(fn_def).or_else(|| must_use_diag(ty_def)) {
             acc.push(diag);

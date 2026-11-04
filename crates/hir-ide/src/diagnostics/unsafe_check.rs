@@ -26,7 +26,7 @@ use crate::{
     utils::{TargetFeatureIsSafeInTarget, is_fn_unsafe_to_call, target_feature_is_safe_in_target},
 };
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct MissingUnsafeResult {
     pub unsafe_exprs: Vec<(ExprOrPatId, UnsafetyReason)>,
     /// If `fn_is_unsafe` is false, `unsafe_exprs` are hard errors. If true, they're `unsafe_op_in_unsafe_fn`.
@@ -34,6 +34,7 @@ pub struct MissingUnsafeResult {
     pub deprecated_safe_calls: Vec<ExprId>,
 }
 
+#[salsa::tracked(returns(clone))]
 pub fn missing_unsafe(db: &dyn HirDatabase, def: DefWithBodyId) -> MissingUnsafeResult {
     let _p = tracing::info_span!("missing_unsafe").entered();
 
@@ -76,7 +77,7 @@ pub fn missing_unsafe(db: &dyn HirDatabase, def: DefWithBodyId) -> MissingUnsafe
     res
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum UnsafetyReason {
     UnionField,
     UnsafeFnCall,

@@ -4,6 +4,7 @@ mod coercion;
 mod const_effects;
 mod consteval;
 mod derived_impls;
+mod diagnostic_queries;
 mod diagnostics;
 mod display_source_code;
 mod dyn_compatibility;
