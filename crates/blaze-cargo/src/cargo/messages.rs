@@ -70,8 +70,13 @@ pub fn passed(format: Format) {
 /// Writes `said`, the errors of a check, as `format` asks, and ends as cargo ends a build
 /// rustc turned down: with a line for each crate that has an error, on stderr.
 /// `metadata` is the workspace's, which says what package and target each error is of.
-pub fn turned_down(format: Format, said: &[Said], metadata: &Metadata) {
-    let units = Units::of(metadata);
+pub fn turned_down(
+    format: Format,
+    said: &[Said],
+    metadata: &Metadata,
+    checked: Option<&blaze_units::UnitGraph>,
+) {
+    let units = Units::of(metadata, checked);
     let mut failed: Vec<(usize, Vec<&Diagnostic>)> = Vec::new();
     for said in said {
         let mut of_unit: Vec<(usize, Vec<&Diagnostic>)> = Vec::new();
@@ -85,7 +90,12 @@ pub fn turned_down(format: Format, said: &[Said], metadata: &Metadata) {
         failed.extend(of_unit);
     }
     for (unit, diagnostics) in &failed {
-        let said = Said(diagnostics.iter().map(|it| (*it).clone()).collect());
+        let said = Said(
+            diagnostics
+                .iter()
+                .map(|it| units.at_target(*unit, it, &metadata.workspace_root))
+                .collect(),
+        );
         let notes = said.notes();
         match format {
             Format::Human | Format::Json { render: true, .. } => {
@@ -138,17 +148,63 @@ fn failure_note(message: String, rendered: String) -> RustcDiagnostic {
 
 /// The targets of the packages of the workspace, which cargo builds a unit each of.
 struct Units<'a> {
-    targets: Vec<(&'a Package, &'a Target)>,
+    targets: Vec<(&'a Package, &'a Target, bool)>,
 }
 
 impl<'a> Units<'a> {
-    fn of(metadata: &'a Metadata) -> Units<'a> {
-        let packages = metadata.workspace_packages();
-        let targets = packages.into_iter().flat_map(|package| {
-            let targets = package.targets.iter().filter(|it| !it.is_custom_build());
-            targets.map(move |target| (package, target))
-        });
-        Units { targets: targets.collect() }
+    fn of(metadata: &'a Metadata, checked: Option<&blaze_units::UnitGraph>) -> Units<'a> {
+        let mut targets = Vec::new();
+        for package in metadata.workspace_packages() {
+            for target in package.targets.iter().filter(|it| !it.is_custom_build()) {
+                match checked {
+                    Some(graph) => {
+                        for unit in &graph.units {
+                            if unit.pkg_id == package.id.repr
+                                && unit.target.name == target.name
+                                && unit.target.src_path == target.src_path.as_std_path()
+                                && unit.target.kind
+                                    == target
+                                        .kind
+                                        .iter()
+                                        .map(ToString::to_string)
+                                        .collect::<Vec<_>>()
+                            {
+                                targets.push((package, target, unit.checked_as_test));
+                            }
+                        }
+                    }
+                    None => targets.push((package, target, false)),
+                }
+            }
+        }
+        Units { targets }
+    }
+
+    /// A crate root is displayed as Cargo passed it, including parent components.
+    fn at_target(
+        &self,
+        unit: usize,
+        diagnostic: &Diagnostic,
+        root: impl AsRef<Path>,
+    ) -> Diagnostic {
+        let mut diagnostic = diagnostic.clone();
+        let Some((_, target, _)) = self.targets.get(unit) else { return diagnostic };
+        if let Some(span) = &mut diagnostic.span {
+            let file =
+                paths::AbsPathBuf::assert_utf8(root.as_ref().join(&span.file_name)).normalize();
+            let source =
+                paths::AbsPathBuf::assert_utf8(target.src_path.clone().into_std_path_buf())
+                    .normalize();
+            if file == source {
+                let original = target.src_path.as_std_path();
+                span.file_name = original
+                    .strip_prefix(root.as_ref())
+                    .unwrap_or(original)
+                    .to_string_lossy()
+                    .into_owned();
+            }
+        }
+        diagnostic
     }
 
     /// The target whose crate `diagnostic` is in: the one whose root it is, else the one
@@ -156,9 +212,13 @@ impl<'a> Units<'a> {
     /// one place is of the first target.
     fn of_diagnostic(&self, diagnostic: &Diagnostic, root: impl AsRef<Path>) -> usize {
         let Some(span) = &diagnostic.span else { return 0 };
-        let file = root.as_ref().join(&span.file_name);
-        let rank = |(_, target): &(&Package, &Target)| {
-            let src: &Path = target.src_path.as_ref();
+        let file: std::path::PathBuf =
+            paths::AbsPathBuf::assert_utf8(root.as_ref().join(&span.file_name)).normalize().into();
+        let rank = |(_, target, _): &(&Package, &Target, bool)| {
+            let src: std::path::PathBuf =
+                paths::AbsPathBuf::assert_utf8(target.src_path.clone().into_std_path_buf())
+                    .normalize()
+                    .into();
             let dir = src.parent().filter(|it| file.starts_with(it))?;
             let first = [TargetKind::Lib, TargetKind::Bin, TargetKind::Example, TargetKind::Test];
             let kind = first.iter().position(|it| target.kind.contains(it)).unwrap_or(first.len());
@@ -170,7 +230,7 @@ impl<'a> Units<'a> {
 
     /// The unit as cargo names it: `` `app` (bin "app") ``.
     fn named(&self, unit: usize) -> String {
-        let Some((package, target)) = self.targets.get(unit) else {
+        let Some((package, target, test)) = self.targets.get(unit) else {
             return "the workspace".to_owned();
         };
         let kind = match target.kind.first() {
@@ -182,12 +242,13 @@ impl<'a> Units<'a> {
             Some(TargetKind::Bench) => format!("bench \"{}\"", target.name),
             _ => format!("\"{}\"", target.name),
         };
-        format!("`{}` ({kind})", package.name)
+        let test = *test && (target.is_lib() || target.is_bin());
+        format!("`{}` ({kind}{})", package.name, if test { " test" } else { "" })
     }
 
     /// Writes `message` as cargo's `compiler-message` of the unit.
     fn message(&self, unit: usize, message: RustcDiagnostic) {
-        let Some((package, target)) = self.targets.get(unit) else { return };
+        let Some((package, target, _)) = self.targets.get(unit) else { return };
         let message = Message {
             reason: "compiler-message",
             package_id: &package.id.repr,

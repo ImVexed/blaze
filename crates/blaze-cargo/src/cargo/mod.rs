@@ -282,7 +282,13 @@ fn check(asked: &Invocation) -> anyhow::Result<i32> {
         messages::passed(format);
     };
     let turned_down = |said: &[crate::errors::Said]| -> anyhow::Result<i32> {
-        messages::turned_down(format, said, &state::metadata(asked));
+        let checked = metadata::checked(
+            &asked.selection(),
+            &asked.target_flags(),
+            &cwd,
+            asked.flags.manifest_path.as_deref(),
+        )?;
+        messages::turned_down(format, said, &state::metadata(asked), Some(&checked));
         Ok(FAILED)
     };
     if asked.subcommand == Subcommand::Check

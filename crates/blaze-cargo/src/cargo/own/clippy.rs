@@ -66,7 +66,7 @@ pub fn command(rest: &[String]) -> anyhow::Result<i32> {
         match client::ask(Request::Lint(ahead, serde_json::to_string(&ask)?), Start::IfMissing)? {
             Some(Reply::Linted { answer }) => serde_json::from_str::<Answer>(&answer)?,
             Some(Reply::Checked { errors: Some(errors) }) => {
-                messages::turned_down(format, &[errors], &metadata);
+                messages::turned_down(format, &[errors], &metadata, None);
                 return Ok(FAILED);
             }
             Some(Reply::Cold { reason }) => {
