@@ -477,6 +477,7 @@ impl Checker {
             return Some(format!("{} is new", new.display()));
         }
         let mut change = ChangeWithProcMacros::default();
+        let mut clean_before = Vec::new();
         for watched in &mut self.files {
             let Watched::Source(id) = watched.file else { continue };
             let Some(now) = modified(&watched.path) else {
@@ -495,10 +496,12 @@ impl Checker {
             if self.ran.contains(&id) {
                 return Some(format!("{} runs as it was built", watched.path.display()));
             }
+            clean_before.push((id, crate::outline::skeleton(db, id)));
             change.change_file(id, Some(text));
         }
         db.apply_change(change);
         crate::prepare_macro_sessions(db);
+        crate::invalidate_clean_checks(db, &clean_before);
         None
     }
 

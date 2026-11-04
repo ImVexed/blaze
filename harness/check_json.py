@@ -98,6 +98,19 @@ CASES = {
         "shared/content/model/tests/expected_case_rng.rs": "pub fn value() -> u32 { 0 }\n",
         "shared/content/model/tests/expected_case_alternate_rng.rs": "pub fn value() -> u32 { 0 }\n",
     },
+    # A dependency signature edit must invalidate an unchanged caller's clean body.
+    "warm_dependency_change": {
+        "src/lib.rs": "mod dep;\npub fn caller() { let _: u32 = dep::value(); }\n",
+        "src/dep.rs": "pub fn value() -> u32 { 1 }\n",
+    },
+    "warm_dependency_change_local_const": {
+        "src/lib.rs": "mod dep;\npub fn caller() { const LOCAL: u32 = 1; let _ = LOCAL; let _: u32 = dep::value(); }\n",
+        "src/dep.rs": "pub fn value() -> u32 { 1 }\n",
+    },
+    "warm_dependency_macro_span": {
+        "src/lib.rs": "mod dep;\npub fn caller() { let _: [(); 1] = [(); dep::N]; }\n",
+        "src/dep.rs": "pub const N: usize = line!() as usize;\n",
+    },
     # Nothing wrong.
     "fine": {
         "src/main.rs": ALLOW + "fn main() {\n    let _ = 1;\n}\n",
@@ -392,10 +405,30 @@ def module_path_edits(at, home):
     print("  module lifecycle: 5/5 semantic contracts passed; rendered parity is checked separately", flush=True)
 
 
+def dependency_edits(tally, name, at, home):
+    dep = Path(at, "src/dep.rs")
+    original = dep.read_text()
+    caller = Path(at, "src/lib.rs").read_bytes()
+    try:
+        transitions = (("macro span changed", "\n" + original), ("restored", original)) if name == "warm_dependency_macro_span" else (
+            ("signature changed", "pub fn value() -> &'static str { \"changed\" }\n"),
+            ("restored", original),
+            ("body error", 'pub fn value() -> u32 { "wrong" }\n'),
+            ("body restored", original),
+        )
+        for step, text in transitions:
+            dep.write_text(text)
+            compare_run(tally, name + " " + step, "json", at, home)
+            assert Path(at, "src/lib.rs").read_bytes() == caller
+    finally:
+        dep.write_text(original)
+
+
 Case = Literal[
     "two_codes", "one_code_twice", "tab_and_wide_chars", "lib_module", "calls", "moved", "fine",
     "dyn_associated_type_outlives", "nested_projection_outlives", "promoted_enum_array",
     "unpromoted_enum_array", "static_supertrait_object", "cross_package_module_paths",
+    "warm_dependency_change", "warm_dependency_change_local_const", "warm_dependency_macro_span",
 ]
 
 
@@ -427,6 +460,8 @@ def main():
                 compare_run(tally, name, fmt, at, home)
             if name == "cross_package_module_paths":
                 module_path_edits(at, home)
+            if name.startswith("warm_dependency_"):
+                dependency_edits(tally, name, at, home)
             print(f"{name}: done", flush=True)
     finally:
         subprocess.run([BLAZE, "stop"], env=env(home), capture_output=True, check=False)

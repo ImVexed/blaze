@@ -724,8 +724,9 @@ fn declares_items(db: &RootDatabase, func: FunctionId) -> bool {
 }
 
 /// A hash of the file but the bodies nothing else sees into, when the functions written in it
-/// are what they were whenever it hashes the same: when no such body has an item in it, and
-/// the macros that write items are called at the top of the file. The functions are known
+/// are what they were whenever it hashes the same. Bodies containing items are kept whole,
+/// and macro-dependent files retain their raw text, including span-changing whitespace.
+/// The functions are known
 /// by ids handed out a level of nesting at a time, kind by kind; an item in a body, or a call
 /// of a macro, takes one of the ids of its level that a function or a macro call further on
 /// would have had otherwise.
@@ -748,30 +749,30 @@ fn skeleton_of(tree: &SyntaxNode) -> Option<u64> {
                 )
             })
     };
-    // An import's id is of a kind of its own, which no function's is found by.
-    let has_items = |body: &SyntaxNode| {
-        body.descendants().skip(1).any(|it| {
-            ast::Item::can_cast(it.kind())
-                && !matches!(
-                    it.kind(),
-                    SyntaxKind::MACRO_CALL | SyntaxKind::USE | SyntaxKind::EXTERN_CRATE
-                )
-        })
-    };
-    for node in tree.descendants() {
-        if written_by_macro(&node) || is_unseen_body(&node, false) && has_items(&node) {
-            return None;
-        }
+    // Keep the existing item-macro boundary: its expansion can change which functions exist.
+    if tree.descendants().any(|node| written_by_macro(&node)) {
+        return None;
     }
-    Some(
-        hash_outside_bodies(
-            tree,
-            &FxHashSet::default(),
-            &FxHashSet::default(),
-            &FxHashSet::default(),
-        )
-        .0,
-    )
+    let expands = tree.descendants().any(|node| match node.kind() {
+        SyntaxKind::MACRO_CALL | SyntaxKind::MACRO_RULES | SyntaxKind::MACRO_DEF => true,
+        SyntaxKind::ATTR => ast::Attr::cast(node).is_some_and(|attr| {
+            attr.simple_name().is_none_or(|name| !INERT.contains(&name.as_str()))
+        }),
+        _ => false,
+    });
+    if expands {
+        // line!() and procedural macros can observe whitespace anywhere before their span.
+        let mut raw = FxHasher::default();
+        tree.text().to_string().hash(&mut raw);
+        return Some(raw.finish());
+    }
+    let declaring = tree
+        .descendants()
+        .filter(|node| is_unseen_body(node, false))
+        .filter(|body| body.descendants().skip(1).any(|node| ast::Item::can_cast(node.kind())))
+        .filter_map(|body| body.parent().map(|func| func.text_range()))
+        .collect();
+    Some(hash_outside_bodies(tree, &declaring, &FxHashSet::default(), &FxHashSet::default()).0)
 }
 
 /// The hash, and how many of the `declaring` functions were come by. The functions at
@@ -1388,12 +1389,11 @@ fn later() { assert_eq!(1, 1); }
 
     #[test]
     fn functions_are_found_again_by_the_skeleton_after_an_edit_to_bodies() {
-        let file = |body: &str| {
-            format!("use a::b;\nm! {{ x }}\nfn f() {{ {body} }}\nimpl S {{ fn g(&self) {{}} }}")
-        };
+        let file =
+            |body: &str| format!("use a::b;\nfn f() {{ {body} }}\nimpl S {{ fn g(&self) {{}} }}");
         let before = skeleton(&file("1;"));
         assert!(before.is_some());
-        for body in ["2;", "println!(\"{}\", 1);", "use std::fmt::Write; 1;", "let s = m!(a);"] {
+        for body in ["2;"] {
             assert_eq!(skeleton(&file(body)), before, "{body}");
         }
         assert_ne!(skeleton("fn f() {}\nfn h() {}"), skeleton("fn f() {}"));
@@ -1401,15 +1401,40 @@ fn later() { assert_eq!(1, 1); }
 
     #[test]
     fn functions_are_not_found_by_the_skeleton_where_ids_can_move() {
-        // An item in a body, and a macro called where it writes items but at the top.
-        for text in [
-            "fn f() { fn g() {} }",
-            "fn f() { struct S; }",
-            "fn f() { impl S {} }",
-            "impl S { m!(); }",
-            "mod m { n!(); }",
-        ] {
+        // An item-position macro can change which functions exist.
+        for text in ["impl S { m!(); }", "mod m { n!(); }"] {
             assert_eq!(skeleton(text), None, "{text}");
+        }
+    }
+
+    #[test]
+    fn skeleton_keeps_nested_items_and_span_sensitive_expansions() {
+        for item in ["const N: u8 = 1;", "fn nested() -> u8 { 1 }", "struct S;"] {
+            let text = format!("fn f() {{ {item} }} fn other() {{ 10; }}");
+            let before = skeleton(&text);
+            assert!(before.is_some());
+            assert_eq!(before, skeleton(&text.replace("10;", "20;")));
+            assert_ne!(before, skeleton(&text.replace(item, "")));
+            if item.contains('1') {
+                assert_ne!(before, skeleton(&text.replacen('1', "2", 1)));
+            }
+        }
+        for text in [
+            "fn f() { let _ = line!(); }",
+            "macro_rules! m { () => { 1 } } fn f() {}",
+            "#[custom] fn f() {}",
+            "#[derive(Custom)] struct S;",
+        ] {
+            assert!(skeleton(text).is_some());
+            assert_ne!(skeleton(text), skeleton(&format!("\n{text}")));
+        }
+        for text in [
+            "const fn f() -> u8 { 1 }",
+            "async fn f() -> u8 { 1 }",
+            "fn f() -> impl Sized { 1u8 }",
+            "#[inline(always)] fn f() -> u8 { 1 }",
+        ] {
+            assert_ne!(skeleton(text), skeleton(&text.replace('1', "2")));
         }
     }
 

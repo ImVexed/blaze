@@ -6573,6 +6573,14 @@ type CleanKey = (vfs::FileId, Option<(usize, u64)>, (bool, bool));
 static CLEAN: std::sync::LazyLock<std::sync::Mutex<FxHashMap<CleanKey, Clean>>> =
     std::sync::LazyLock::new(Default::default);
 
+/// A changed signature or impl can invalidate bodies in any file or dependent crate.
+/// Only equal, known structural fingerprints prove that the edit stayed inside bodies.
+fn invalidate_clean_checks(db: &RootDatabase, before: &[(vfs::FileId, Option<u64>)]) {
+    if before.iter().any(|&(file, was)| was.is_none() || was != outline::skeleton(db, file)) {
+        lock(&CLEAN).clear();
+    }
+}
+
 /// The errors the check of `file` as a module of the crates `within` finds, by the rules
 /// (lints denied, borrowck refused) of [`broken_in`]. After a check that found none, the next
 /// asks rust-analyzer only for the bodies an edit can have changed ([`Clean`]); every body is
@@ -10433,6 +10441,8 @@ fn run_holding(
         homed.dedup();
         take_first_values(&db, &mut programs, &homed);
         home_in_rustcs(&db, &listed, &mut programs, &homed);
+        let clean_before: Vec<_> =
+            editing.iter().map(|&file| (file, outline::skeleton(&db, file))).collect();
         outlines.before_edit(&db, &listed, &editing);
         for &index in &gone {
             if let Watched::Source(id) = files[index].file {
@@ -10524,6 +10534,10 @@ fn run_holding(
         let paths = Arc::new(Sources { paths });
         let before_outlines = start.elapsed();
         let sources = outlines.after_edit(&db, &listed, sources);
+        invalidate_clean_checks(&db, &clean_before);
+        if sources.iter().any(|source| !source.bodies_only) {
+            lock(&CLEAN).clear();
+        }
         let outlined = start.elapsed();
         for outline::Changed { file, bodies_only, copied, generics, inline, added } in sources {
             if copied || !generics.is_empty() || !inline.is_empty() {
