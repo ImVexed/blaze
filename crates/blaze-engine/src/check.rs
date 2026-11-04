@@ -6,6 +6,7 @@
 pub(crate) use blaze_cargo::check::{LINT, RELOAD};
 
 use std::{
+    io,
     path::{Path, PathBuf},
     sync::Arc,
     time::SystemTime,
@@ -265,7 +266,7 @@ struct Checker {
     /// Every file loaded, by path.
     loaded: FxHashSet<PathBuf>,
     /// The manifests, the lock file and cargo's configuration, as they were when loaded.
-    manifests: FxHashMap<PathBuf, Option<SystemTime>>,
+    manifests: FxHashMap<PathBuf, ManifestInput>,
     sources: Sources,
     root: PathBuf,
     lints_capped: bool,
@@ -294,17 +295,17 @@ impl Checker {
         let mut ran_roots = FxHashSet::default();
         let mut script_roots = FxHashSet::default();
         let mut local_roots = FxHashSet::default();
-        let mut manifests = FxHashMap::default();
+        let mut manifests = FxHashSet::default();
         let mut targets = Vec::new();
         for workspace in checkouts.loaded.workspaces() {
             let ProjectWorkspaceKind::Cargo { cargo, .. } = &workspace.kind else { continue };
             let root: &Path = cargo.workspace_root().as_ref();
             targets.push(PathBuf::from(cargo.target_directory().to_string()));
             for file in ["Cargo.lock", ".cargo/config.toml", ".cargo/config"] {
-                manifests.insert(root.join(file), None);
+                manifests.insert(root.join(file));
             }
             for package in cargo.packages().filter(|it| cargo[*it].is_local) {
-                manifests.insert(cargo[package].manifest.to_path_buf().into(), None);
+                manifests.insert(cargo[package].manifest.to_path_buf().into());
                 for &target in &cargo[package].targets {
                     let target = &cargo[target];
                     local_roots.insert(PathBuf::from(target.root.clone()));
@@ -321,9 +322,13 @@ impl Checker {
                 }
             }
         }
-        for (path, when) in &mut manifests {
-            *when = modified(path);
-        }
+        let manifests = manifests
+            .into_iter()
+            .map(|path| {
+                let input = ManifestInput::new(&path);
+                (path, input)
+            })
+            .collect();
         let path_of = |file: vfs::FileId| -> Option<PathBuf> {
             Some(vfs.file_path(file).as_path()?.to_path_buf().into())
         };
@@ -466,8 +471,8 @@ impl Checker {
 
     /// Takes in the source as it is now, or says why only loading it again does.
     fn refresh(&mut self, db: &mut RootDatabase) -> Option<String> {
-        for (path, when) in &self.manifests {
-            if modified(path) != *when {
+        for (path, input) in &mut self.manifests {
+            if !input.unchanged(path) {
                 return Some(format!("{} changed", path.display()));
             }
         }
@@ -541,6 +546,48 @@ impl Checker {
     }
 }
 
+/// Manifests may be rewritten by another slot user and restored before our next request.
+/// A timestamp change alone says nothing about the graph this checker loaded.
+struct ManifestInput {
+    mtime: Option<SystemTime>,
+    bytes: io::Result<Option<Vec<u8>>>,
+}
+
+impl ManifestInput {
+    fn new(path: &Path) -> Self {
+        Self { mtime: modified(path), bytes: Self::read(path) }
+    }
+
+    fn read(path: &Path) -> io::Result<Option<Vec<u8>>> {
+        match std::fs::read(path) {
+            Ok(bytes) => Ok(Some(bytes)),
+            Err(error) if error.kind() == io::ErrorKind::NotFound => Ok(None),
+            Err(error) => Err(error),
+        }
+    }
+
+    fn unchanged(&mut self, path: &Path) -> bool {
+        let now = match std::fs::metadata(path).and_then(|metadata| metadata.modified()) {
+            Ok(now) => Some(now),
+            Err(error) if error.kind() == io::ErrorKind::NotFound => None,
+            Err(_) => return false,
+        };
+        // An unreadable startup input never becomes a reusable graph snapshot.
+        if self.bytes.is_err() {
+            return false;
+        }
+        if now == self.mtime {
+            return true;
+        }
+        let Ok(bytes) = Self::read(path) else { return false };
+        if !self.bytes.as_ref().is_ok_and(|was| *was == bytes) {
+            return false;
+        }
+        self.mtime = now;
+        true
+    }
+}
+
 fn modified(path: &Path) -> Option<SystemTime> {
     std::fs::metadata(path).and_then(|it| it.modified()).ok()
 }
@@ -579,6 +626,56 @@ fn new_source(dir: &Path, loaded: &FxHashSet<PathBuf>, targets: &[PathBuf]) -> O
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn restored_manifest_bytes_keep_the_loaded_graph() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("Cargo.lock");
+        std::fs::write(&path, "graph A").unwrap();
+        let mut input = ManifestInput::new(&path);
+        let before = input.mtime;
+        std::thread::sleep(std::time::Duration::from_millis(2));
+        std::fs::write(&path, "graph B").unwrap();
+        std::fs::write(&path, "graph A").unwrap();
+        assert_ne!(modified(&path), before);
+        assert!(input.unchanged(&path));
+        assert_eq!(input.mtime, modified(&path));
+        assert!(input.unchanged(&path));
+    }
+
+    #[test]
+    fn changed_and_missing_manifest_bytes_require_a_reload() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("Cargo.toml");
+        let mut absent = ManifestInput::new(&path);
+        assert!(absent.unchanged(&path));
+        std::fs::write(&path, "graph A").unwrap();
+        assert!(!absent.unchanged(&path));
+        let mut present = ManifestInput::new(&path);
+        std::thread::sleep(std::time::Duration::from_millis(2));
+        std::fs::write(&path, "graph B").unwrap();
+        assert!(!present.unchanged(&path));
+        std::fs::remove_file(&path).unwrap();
+        assert!(!present.unchanged(&path));
+    }
+
+    #[test]
+    fn unreadable_manifest_inputs_never_match_each_other_or_absence() {
+        let dir = tempfile::tempdir().unwrap();
+        // Reading a directory fails on every supported host, including privileged runners.
+        let mut unreadable = ManifestInput::new(dir.path());
+        assert!(unreadable.bytes.is_err());
+        assert!(!unreadable.unchanged(dir.path()));
+        assert!(!unreadable.unchanged(dir.path()));
+        let missing = dir.path().join("missing");
+        assert!(!unreadable.unchanged(&missing));
+        std::fs::write(&missing, "graph A").unwrap();
+        let mut present = ManifestInput::new(&missing);
+        std::thread::sleep(std::time::Duration::from_millis(2));
+        std::fs::remove_file(&missing).unwrap();
+        std::fs::create_dir(&missing).unwrap();
+        assert!(!present.unchanged(&missing));
+    }
 
     #[test]
     fn a_stale_target_directory_is_not_new_source_but_a_module_named_target_is() {
