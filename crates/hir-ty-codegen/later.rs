@@ -97,48 +97,57 @@ pub(super) struct Keeper<'k, 'db> {
 impl<'db> Keeper<'_, 'db> {
     pub(super) fn make(&mut self, later: &Later<'_>) -> Made {
         let db = self.db;
-        let (debug, declared, rows, kept) = match &later.of {
+        let (debug, rows, kept) = match &later.of {
             Of::Root { func, symbol } => {
-                let name = hir_ty_mir::mir::type_name::rustc_debug_function(db, *func, &[])
-                    .unwrap_or_else(|| FunctionSignature::of(db, *func).name.as_str().to_owned());
-                let declared = self.debug_declaration_at(*func);
                 let rows = match &later.unit_rows {
                     Some(rows) => Some(rows),
                     None => (self.debug && !later.tiered).then(|| root_rows(db, *func)),
                 };
+                let debug = rows.map(|_| {
+                    let name = hir_ty_mir::mir::type_name::rustc_debug_function(db, *func, &[])
+                        .unwrap_or_else(|| {
+                            FunctionSignature::of(db, *func).name.as_str().to_owned()
+                        });
+                    let declared = self.debug_declaration_at(*func);
+                    (FunctionDebug::new(name, symbol.clone()), declared)
+                });
                 let kept = later.keeps.then(|| (root_instance(db, *func), func.krate(db)));
-                (FunctionDebug::new(name, symbol.clone()), declared, rows, kept)
+                (debug, rows, kept)
             }
             Of::Instance { instance, env } => {
-                let name = backtrace_name(db, instance);
-                let declared = self.written_at(instance, env.krate);
-                let known = match instance.def {
-                    InstanceDef::Fn(func) => hir_ty_mir::mir::type_name::rustc_debug_function(
-                        db,
-                        func,
-                        instance.args.as_ref().as_slice(),
-                    ),
-                    InstanceDef::Closure(id) => {
-                        let at = InternedClosureId::from_id(id).loc(db);
-                        debug_closure(db, instance, at.owner, at.expr)
-                    }
-                    InstanceDef::Coroutine(id) | InstanceDef::CoroutineByMove(id) => {
-                        let at = InternedCoroutineId::from_id(id).loc(db);
-                        debug_closure(db, instance, at.owner, at.expr)
-                    }
-                    _ => None,
-                };
-                let known = known.unwrap_or_else(|| name.clone());
                 let rows = match &later.unit_rows {
                     Some(rows) => Some(rows),
                     None => (self.debug && !later.tiered)
                         .then(|| instance_rows(db, instance.clone(), env.clone())),
                 };
+                let debug = rows.map(|_| {
+                    let name = backtrace_name(db, instance);
+                    let declared = self.written_at(instance, env.krate);
+                    let known = match instance.def {
+                        InstanceDef::Fn(func) => hir_ty_mir::mir::type_name::rustc_debug_function(
+                            db,
+                            func,
+                            instance.args.as_ref().as_slice(),
+                        ),
+                        InstanceDef::Closure(id) => {
+                            let at = InternedClosureId::from_id(id).loc(db);
+                            debug_closure(db, instance, at.owner, at.expr)
+                        }
+                        InstanceDef::Coroutine(id) | InstanceDef::CoroutineByMove(id) => {
+                            let at = InternedCoroutineId::from_id(id).loc(db);
+                            debug_closure(db, instance, at.owner, at.expr)
+                        }
+                        _ => None,
+                    };
+                    let known = known.unwrap_or_else(|| name.clone());
+                    (FunctionDebug::new(known, name), declared)
+                });
                 let kept = later.keeps.then(|| (instance.clone(), env.krate));
-                (FunctionDebug::new(known, name), declared, rows, kept)
+                (debug, rows, kept)
             }
         };
-        let debug = self.describe(later.compiled, rows, debug, declared);
+        let debug = debug
+            .and_then(|(debug, declared)| self.describe(later.compiled, rows, debug, declared));
         let kept = kept.and_then(|(instance, home)| {
             let tally = backend::Tally::global();
             tally.step(Step::StoreWrite, || self.keep(&instance, home, later, debug.clone()))
