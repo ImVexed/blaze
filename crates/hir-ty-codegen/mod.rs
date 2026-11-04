@@ -6451,11 +6451,11 @@ impl<'a, 'db> ObjectCodegen<'a, 'db> {
     fn settled(&self, instance: &Instance) -> Result<Instance> {
         let Some(mixed) = &self.mixed else { return Ok(instance.clone()) };
         let (db, asking) = (self.db, instance.checked);
+        let no_rustc_copies = self.symbols.nothing_of_rustc()
+            && !self.symbols.onto_rustcs()
+            && self.base.is_none_or(|base| !base.rustc);
         let nameless = || {
-            if self.symbols.nothing_of_rustc()
-                && !self.symbols.onto_rustcs()
-                && self.base.is_none_or(|base| !base.rustc)
-            {
+            if no_rustc_copies {
                 return Ok(asking);
             }
             // Only the crates that made a copy of a function of its name, or of a closure
@@ -6476,7 +6476,9 @@ impl<'a, 'db> ObjectCodegen<'a, 'db> {
             Ok(checked)
         };
         let checked = match instance.def {
-            InstanceDef::Fn(func) => self.settled_function(mixed, func, instance, &nameless)?,
+            InstanceDef::Fn(func) => {
+                self.settled_function(mixed, func, instance, no_rustc_copies, &nameless)?
+            }
             InstanceDef::Closure(_)
             | InstanceDef::Coroutine(_)
             | InstanceDef::CoroutineByMove(_) => nameless()?,
@@ -6498,11 +6500,15 @@ impl<'a, 'db> ObjectCodegen<'a, 'db> {
         mixed: &settled::Mixed,
         func: FunctionId,
         instance: &Instance,
+        no_rustc_copies: bool,
         nameless: &dyn Fn() -> Result<bool>,
     ) -> Result<bool> {
         let (db, asking) = (self.db, instance.checked);
         let args = instance.args.as_ref();
         let checked = if !args.iter().all(|arg| arg.region().is_some()) {
+            if no_rustc_copies {
+                return Ok(asking);
+            }
             let Some(path) = self.instance_path(func, args) else { return nameless() };
             let copies = self.symbols.path(&path).map(|it| self.symbols.copies(&it));
             let holders: Vec<_> =
