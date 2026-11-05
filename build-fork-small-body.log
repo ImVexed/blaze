@@ -1,0 +1,1942 @@
+warning: unused field `categories` in `workspace.package`
+  --> Cargo.toml:32:1
+   |
+32 | categories = ["development-tools", "development-tools::build-utils"]
+   | ^^^^^^^^^^
+   |
+   = note: `cargo::unused_workspace_package_fields` is set to `warn` by default
+help: consider removing the field `workspace.package.categories`
+warning: workspace (manifest) generated 1 warning
+warning: missing `[lints]` to inherit `[workspace.lints]`
+  --> vendor/flecs-c/Cargo.toml
+   = note: `cargo::missing_lints_inheritance` is set to `warn` by default
+help: to inherit `workspace.lints, add:
+   |
+16 ~ cc = "1"
+17 + [lints]
+18 + workspace = true
+   |
+help: to clarify your intent to not inherit, add:
+   |
+16 ~ cc = "1"
+17 + [lints]
+   |
+warning: `flecs-c` (manifest) generated 1 warning
+warning: missing `[lints]` to inherit `[workspace.lints]`
+  --> crates/rustc_abi/Cargo.toml
+   = note: `cargo::missing_lints_inheritance` is set to `warn` by default
+help: to inherit `workspace.lints, add:
+   |
+24 ~ tracing = "0.1"
+25 + [lints]
+26 + workspace = true
+   |
+help: to clarify your intent to not inherit, add:
+   |
+24 ~ tracing = "0.1"
+25 + [lints]
+   |
+warning: `rustc_abi` (manifest) generated 1 warning
+warning: missing `[lints]` to inherit `[workspace.lints]`
+  --> crates/blaze-live/Cargo.toml
+   = note: `cargo::missing_lints_inheritance` is set to `warn` by default
+help: to inherit `workspace.lints, add:
+   |
+14 ~ [dependencies]
+15 + [lints]
+16 + workspace = true
+   |
+help: to clarify your intent to not inherit, add:
+   |
+14 ~ [dependencies]
+15 + [lints]
+   |
+warning: `blaze-live` (manifest) generated 1 warning
+warning: missing `[lints]` to inherit `[workspace.lints]`
+  --> crates/syntax-tree/Cargo.toml
+   = note: `cargo::missing_lints_inheritance` is set to `warn` by default
+help: to inherit `workspace.lints, add:
+   |
+27 ~ serde1 = ["serde", "text-size/serde"]
+28 + [lints]
+29 + workspace = true
+   |
+help: to clarify your intent to not inherit, add:
+   |
+27 ~ serde1 = ["serde", "text-size/serde"]
+28 + [lints]
+   |
+warning: `syntax-tree` (manifest) generated 1 warning
+warning: missing `[lints]` to inherit `[workspace.lints]`
+  --> vendor/rustc_type_ir/Cargo.toml
+   = note: `cargo::missing_lints_inheritance` is set to `warn` by default
+help: to inherit `workspace.lints, add:
+   |
+92 ~ version = "0.1"
+93 + [lints]
+94 + workspace = true
+   |
+help: to clarify your intent to not inherit, add:
+   |
+92 ~ version = "0.1"
+93 + [lints]
+   |
+warning: `rustc_type_ir` (manifest) generated 1 warning
+warning: missing `[lints]` to inherit `[workspace.lints]`
+  --> crates/blaze-cache/Cargo.toml
+   = note: `cargo::missing_lints_inheritance` is set to `warn` by default
+help: to inherit `workspace.lints, add:
+   |
+24 ~ serde = { version = "1.0.219", features = ["derive"] }
+25 + [lints]
+26 + workspace = true
+   |
+help: to clarify your intent to not inherit, add:
+   |
+24 ~ serde = { version = "1.0.219", features = ["derive"] }
+25 + [lints]
+   |
+warning: `blaze-cache` (manifest) generated 1 warning
+warning: missing `[lints]` to inherit `[workspace.lints]`
+  --> crates/blaze-cache-macros/Cargo.toml
+   = note: `cargo::missing_lints_inheritance` is set to `warn` by default
+help: to inherit `workspace.lints, add:
+   |
+14 ~ proc-macro = true
+15 + [lints]
+16 + workspace = true
+   |
+help: to clarify your intent to not inherit, add:
+   |
+14 ~ proc-macro = true
+15 + [lints]
+   |
+warning: `blaze-cache-macros` (manifest) generated 1 warning
+warning: missing `[lints]` to inherit `[workspace.lints]`
+  --> vendor/rustc_next_trait_solver/Cargo.toml
+   = note: `cargo::missing_lints_inheritance` is set to `warn` by default
+help: to inherit `workspace.lints, add:
+   |
+63 ~ version = "0.1"
+64 + [lints]
+65 + workspace = true
+   |
+help: to clarify your intent to not inherit, add:
+   |
+63 ~ version = "0.1"
+64 + [lints]
+   |
+warning: `rustc_next_trait_solver` (manifest) generated 1 warning
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on package cache
+warning: constant `SELF_KW` is never used
+  --> crates/const-ast/src/kinds.rs:11:18
+   |
+11 | pub(crate) const SELF_KW: u16 = 86 | TOKEN;
+   |                  ^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: constant `INT_NUMBER` is never used
+  --> crates/const-ast/src/kinds.rs:12:18
+   |
+12 | pub(crate) const INT_NUMBER: u16 = 148 | TOKEN;
+   |                  ^^^^^^^^^^
+
+warning: constant `IDENT` is never used
+  --> crates/const-ast/src/kinds.rs:14:18
+   |
+14 | pub(crate) const IDENT: u16 = 153 | TOKEN;
+   |                  ^^^^^
+
+warning: `const-ast` (lib) generated 3 warnings
+warning: variable `Reason` should have a snake case name
+ --> vendor/llvm-sys/src/error_handling.rs:1:55
+  |
+1 | pub type LLVMFatalErrorHandler = Option<extern "C" fn(Reason: *const ::libc::c_char)>;
+  |                                                       ^^^^^^ help: convert the identifier to snake case: `reason`
+  |
+  = note: `#[warn(non_snake_case)]` (part of `#[warn(nonstandard_style)]`) on by default
+
+warning: variable `Opaque` should have a snake case name
+  --> vendor/llvm-sys/src/execution_engine.rs:32:5
+   |
+32 |     Opaque: *mut ::libc::c_void,
+   |     ^^^^^^ help: convert the identifier to snake case (notice the capitalization): `opaque`
+
+warning: variable `Size` should have a snake case name
+  --> vendor/llvm-sys/src/execution_engine.rs:33:5
+   |
+33 |     Size: ::libc::uintptr_t,
+   |     ^^^^ help: convert the identifier to snake case (notice the capitalization): `size`
+
+warning: variable `Alignment` should have a snake case name
+  --> vendor/llvm-sys/src/execution_engine.rs:34:5
+   |
+34 |     Alignment: ::libc::c_uint,
+   |     ^^^^^^^^^ help: convert the identifier to snake case: `alignment`
+
+warning: variable `SectionID` should have a snake case name
+  --> vendor/llvm-sys/src/execution_engine.rs:35:5
+   |
+35 |     SectionID: ::libc::c_uint,
+   |     ^^^^^^^^^ help: convert the identifier to snake case: `section_id`
+
+warning: variable `SectionName` should have a snake case name
+  --> vendor/llvm-sys/src/execution_engine.rs:36:5
+   |
+36 |     SectionName: *const ::libc::c_char,
+   |     ^^^^^^^^^^^ help: convert the identifier to snake case: `section_name`
+
+warning: variable `Opaque` should have a snake case name
+  --> vendor/llvm-sys/src/execution_engine.rs:39:5
+   |
+39 |     Opaque: *mut ::libc::c_void,
+   |     ^^^^^^ help: convert the identifier to snake case (notice the capitalization): `opaque`
+
+warning: variable `Size` should have a snake case name
+  --> vendor/llvm-sys/src/execution_engine.rs:40:5
+   |
+40 |     Size: ::libc::uintptr_t,
+   |     ^^^^ help: convert the identifier to snake case (notice the capitalization): `size`
+
+warning: variable `Alignment` should have a snake case name
+  --> vendor/llvm-sys/src/execution_engine.rs:41:5
+   |
+41 |     Alignment: ::libc::c_uint,
+   |     ^^^^^^^^^ help: convert the identifier to snake case: `alignment`
+
+warning: variable `SectionID` should have a snake case name
+  --> vendor/llvm-sys/src/execution_engine.rs:42:5
+   |
+42 |     SectionID: ::libc::c_uint,
+   |     ^^^^^^^^^ help: convert the identifier to snake case: `section_id`
+
+warning: variable `SectionName` should have a snake case name
+  --> vendor/llvm-sys/src/execution_engine.rs:43:5
+   |
+43 |     SectionName: *const ::libc::c_char,
+   |     ^^^^^^^^^^^ help: convert the identifier to snake case: `section_name`
+
+warning: variable `IsReadOnly` should have a snake case name
+  --> vendor/llvm-sys/src/execution_engine.rs:44:5
+   |
+44 |     IsReadOnly: LLVMBool,
+   |     ^^^^^^^^^^ help: convert the identifier to snake case: `is_read_only`
+
+warning: variable `Opaque` should have a snake case name
+  --> vendor/llvm-sys/src/execution_engine.rs:47:19
+   |
+47 |     extern "C" fn(Opaque: *mut ::libc::c_void, ErrMsg: *mut *mut ::libc::c_char) -> LLVMBool;
+   |                   ^^^^^^ help: convert the identifier to snake case (notice the capitalization): `opaque`
+
+warning: variable `ErrMsg` should have a snake case name
+  --> vendor/llvm-sys/src/execution_engine.rs:47:48
+   |
+47 |     extern "C" fn(Opaque: *mut ::libc::c_void, ErrMsg: *mut *mut ::libc::c_char) -> LLVMBool;
+   |                                                ^^^^^^ help: convert the identifier to snake case: `err_msg`
+
+warning: variable `Opaque` should have a snake case name
+  --> vendor/llvm-sys/src/execution_engine.rs:48:66
+   |
+48 | pub type LLVMMemoryManagerDestroyCallback = Option<extern "C" fn(Opaque: *mut ::libc::c_void)>;
+   |                                                                  ^^^^^^ help: convert the identifier to snake case (notice the capitalization): `opaque`
+
+   Compiling blaze-engine v0.0.0 (/srv/build/blaze-src/crates/blaze-engine)
+warning: `llvm-sys` (lib) generated 15 warnings
+warning: unreachable statement
+   --> vendor/rustc_next_trait_solver/src/solve/trait_goals.rs:242:17
+    |
+241 |                 ecx.opaque_accesses.rerun_always(RerunReason::AutoTraitLeakage)?;
+    |                                                                                - any code following this expression is unreachable
+242 |                 return Err(NoSolution.into());
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unreachable statement
+    |
+    = note: `#[warn(unreachable_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: unreachable statement
+   --> vendor/rustc_next_trait_solver/src/solve/normalizes_to/mod.rs:342:21
+    |
+341 |                     ecx.opaque_accesses.rerun_always(RerunReason::FetchEligibleAssocItem)?;
+    |                                                                                          - any code following this expression is unreachable
+342 |                     return Err(NoSolution.into());
+    |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unreachable statement
+
+warning: field `size` is never read
+   --> crates/blaze-splice/src/macho.rs:139:5
+    |
+137 | struct Segment {
+    |        ------- field in this struct
+138 |     address: u64,
+139 |     size: u64,
+    |     ^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `rustc_next_trait_solver` (lib) generated 2 warnings
+warning: `blaze-splice` (lib) generated 1 warning
+warning: function `is_range_pat_op` is never used
+    --> crates/syntax/src/ast/node_ext.rs:1073:4
+     |
+1073 | fn is_range_pat_op(kind: SyntaxKind) -> bool {
+     |    ^^^^^^^^^^^^^^^
+     |
+     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `open_pack` is never used
+   --> crates/blaze-store/src/lib.rs:800:4
+    |
+800 | fn open_pack(path: &Path) -> io::Result<File> {
+    |    ^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `syntax` (lib) generated 1 warning
+warning: `blaze-store` (lib) generated 1 warning
+warning: unused variable: `span`
+   --> crates/hir-expand/src/builtin/derive_macro.rs:165:27
+    |
+165 |     fn field_names(&self, span: Span) -> Vec<tt::Ident> {
+    |                           ^^^^ help: if this is intentional, prefix it with an underscore: `_span`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unreachable `pub` item
+   --> crates/project-model/src/sysroot.rs:494:1
+    |
+494 | pub const BLAZE_LIBRARY: &str = "BLAZE_LIBRARY";
+    | ---^^^^^^^^^^^^^^^^^^^^^^^^^^
+    | |
+    | help: consider restricting its visibility: `pub(crate)`
+    |
+    = help: or consider exporting it for use by other crates
+    = note: requested on the command line with `-W unreachable-pub`
+
+warning: unreachable `pub` item
+    --> crates/project-model/src/workspace.rs:1345:1
+     |
+1345 | pub const CONST_AST_CRATE: &str = "const_ast";
+     | ---^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     | |
+     | help: consider restricting its visibility: `pub(crate)`
+     |
+     = help: or consider exporting it for use by other crates
+
+warning: unreachable `pub` item
+    --> crates/project-model/src/workspace.rs:1355:1
+     |
+1355 | pub fn const_ast_dir(sysroot: &Sysroot) -> Option<AbsPathBuf> {
+     | ---^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     | |
+     | help: consider restricting its visibility: `pub(crate)`
+     |
+     = help: or consider exporting it for use by other crates
+
+warning: `hir-expand` (lib) generated 1 warning (run `cargo fix --lib -p hir-expand` to apply 1 suggestion)
+warning: `project-model` (lib) generated 3 warnings (run `cargo fix --lib -p project-model` to apply 3 suggestions)
+warning: `extern crate` is not idiomatic in the new edition
+  --> crates/hir-def/src/lib.rs:18:1
+   |
+18 | pub extern crate rustc_abi;
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: requested on the command line with `-W unused-extern-crates`
+help: convert it to a `use`
+   |
+18 - pub extern crate rustc_abi;
+18 + pub use rustc_abi;
+   |
+
+warning: `hir-def` (lib) generated 1 warning (run `cargo fix --lib -p hir-def` to apply 1 suggestion)
+warning: unused extern crate
+  --> crates/hir-ty/src/lib.rs:16:1
+   |
+16 | extern crate rustc_abi;
+   | ^^^^^^^^^^^^^^^^^^^^^^^ unused
+   |
+   = note: requested on the command line with `-W unused-extern-crates`
+help: remove the unused `extern crate`
+   |
+16 - extern crate rustc_abi;
+   |
+
+warning: unused extern crate
+  --> crates/hir-ty/src/lib.rs:17:1
+   |
+17 | extern crate rustc_next_trait_solver;
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+   |
+help: remove the unused `extern crate`
+   |
+17 - extern crate rustc_next_trait_solver;
+   |
+
+warning: unused extern crate
+  --> crates/hir-ty/src/lib.rs:18:1
+   |
+18 | extern crate rustc_type_ir;
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+   |
+help: remove the unused `extern crate`
+   |
+18 - extern crate rustc_type_ir;
+   |
+
+warning: a method with this name may be added to the standard library in the future
+   --> crates/hir-ty/src/solver_errors.rs:130:66
+    |
+130 |             args.as_closure().sig().map_bound(|sig| sig.inputs().as_slice()[0])
+    |                                                                  ^^^^^^^^
+    |
+    = help: call with fully qualified syntax `rustc_type_ir::inherent::SliceLike::as_slice(...)` to keep using the current method
+    = warning: once this associated item is added to the standard library, the ambiguity may cause an error or change in behavior!
+    = note: for more information, see issue #48919 <https://github.com/rust-lang/rust/issues/48919>
+    = note: `#[warn(unstable_name_collisions)]` (part of `#[warn(future_incompatible)]`) on by default
+help: add `#![feature(str_as_str)]` to the crate attributes to enable `core::slice::<impl [T]>::as_slice`
+   --> crates/hir-ty/src/lib.rs:14:1
+    |
+ 14 + #![feature(str_as_str)]
+    |
+
+warning: variable does not need to be mutable
+   --> crates/hir-ty/src/next_solver/solver.rs:140:13
+    |
+140 |         let mut constraints = inner.unwrap_region_constraints();
+    |             ----^^^^^^^^^^^
+    |             |
+    |             help: remove this `mut`
+    |
+    = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: `hir-ty` (lib) generated 5 warnings (run `cargo fix --lib -p hir-ty` to apply 4 suggestions)
+warning: unused import: `item_tree::FieldsShape`
+  --> crates/hir-ty-mir/src/mir/eval.rs:17:5
+   |
+17 |     item_tree::FieldsShape,
+   |     ^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unnecessary parentheses around pattern
+    --> crates/hir-ty-mir/src/mir/lower.rs:2512:20
+     |
+2512 |             if let (OperandKind::Copy(place) | OperandKind::Move(place)) = &operand.kind
+     |                    ^                                                   ^
+     |
+     = note: `#[warn(unused_parens)]` (part of `#[warn(unused)]`) on by default
+help: remove these parentheses
+     |
+2512 -             if let (OperandKind::Copy(place) | OperandKind::Move(place)) = &operand.kind
+2512 +             if let OperandKind::Copy(place) | OperandKind::Move(place) = &operand.kind
+     |
+
+warning: hidden lifetime parameters in types are deprecated
+    --> crates/hir-ty-mir/src/mir/lower.rs:5099:33
+     |
+5099 | pub fn is_builtin_index(infer: &InferenceResult, base: ExprId, index: ExprId) -> bool {
+     |                                 ^^^^^^^^^^^^^^^ expected lifetime parameter
+     |
+     = note: requested on the command line with `-W elided-lifetimes-in-paths`
+help: indicate the anonymous lifetime
+     |
+5099 | pub fn is_builtin_index(infer: &InferenceResult<'_>, base: ExprId, index: ExprId) -> bool {
+     |                                                ++++
+
+warning: method `resolve_mir_span` is never used
+   --> crates/hir-ty-mir/src/mir/eval.rs:660:8
+    |
+555 | impl<'db> Evaluator<'db> {
+    | ------------------------ method in this implementation
+...
+660 |     fn resolve_mir_span(
+    |        ^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused extern crate
+  --> crates/hir-ty-wfcheck/src/lib.rs:13:1
+   |
+13 | extern crate rustc_type_ir;
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+   |
+   = note: requested on the command line with `-W unused-extern-crates`
+help: remove the unused `extern crate`
+   |
+13 - extern crate rustc_type_ir;
+   |
+
+warning: unused import: `rustc_type_ir::inherent::Clause`
+   --> crates/hir-ty-wfcheck/src/outlives.rs:333:9
+    |
+333 |     use rustc_type_ir::inherent::Clause as _;
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: value assigned to `self_ty` is never read
+   --> crates/hir-ty-wfcheck/src/lib.rs:477:31
+    |
+477 |             let mut self_ty = None;
+    |                               ^^^^ this value is reassigned later and never used
+...
+482 |                     self_ty = Some(trait_ref.self_ty());
+    |                     ----------------------------------- `self_ty` is overwritten here before the previous value is read
+    |
+    = note: `#[warn(unused_assignments)]` (part of `#[warn(unused)]`) on by default
+
+warning: `hir-ty-mir` (lib) generated 4 warnings (run `cargo fix --lib -p hir-ty-mir` to apply 2 suggestions)
+warning: `hir-ty-wfcheck` (lib) generated 3 warnings (run `cargo fix --lib -p hir-ty-wfcheck` to apply 1 suggestion)
+warning: unused extern crate
+ --> crates/hir-ide/src/lib.rs:9:1
+  |
+9 | extern crate rustc_abi;
+  | ^^^^^^^^^^^^^^^^^^^^^^^ unused
+  |
+  = note: requested on the command line with `-W unused-extern-crates`
+help: remove the unused `extern crate`
+  |
+9 - extern crate rustc_abi;
+  |
+
+warning: unused extern crate
+  --> crates/hir-ide/src/lib.rs:10:1
+   |
+10 | extern crate rustc_type_ir;
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+   |
+help: remove the unused `extern crate`
+   |
+10 - extern crate rustc_type_ir;
+   |
+
+warning: unused extern crate
+ --> crates/hir-ty-borrowck/src/lib.rs:9:1
+  |
+9 | extern crate rustc_type_ir;
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+  |
+  = note: requested on the command line with `-W unused-extern-crates`
+help: remove the unused `extern crate`
+  |
+9 - extern crate rustc_type_ir;
+  |
+
+warning: unused import: `rustc_type_ir::inherent::GenericArgs as _`
+    --> crates/hir-ty-borrowck/src/regions.rs:2350:13
+     |
+2350 |         use rustc_type_ir::inherent::GenericArgs as _;
+     |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: a method with this name may be added to the standard library in the future
+    --> crates/hir-ty-borrowck/src/regions.rs:6185:52
+     |
+6185 |         let &[inputs] = sig.skip_binder().inputs().as_slice() else { return };
+     |                                                    ^^^^^^^^
+     |
+     = help: call with fully qualified syntax `rustc_type_ir::inherent::SliceLike::as_slice(...)` to keep using the current method
+     = warning: once this associated item is added to the standard library, the ambiguity may cause an error or change in behavior!
+     = note: for more information, see issue #48919 <https://github.com/rust-lang/rust/issues/48919>
+     = note: `#[warn(unstable_name_collisions)]` (part of `#[warn(future_incompatible)]`) on by default
+help: add `#![feature(str_as_str)]` to the crate attributes to enable `core::slice::<impl [T]>::as_slice`
+    -->  crates/hir-ty-borrowck/src/lib.rs:8:1
+     |
+   8 + #![feature(str_as_str)]
+     |
+
+warning: a method with this name may be added to the standard library in the future
+    --> crates/hir-ty-borrowck/src/regions.rs:4997:75
+     |
+4997 | ...                   && let &[tupled] = sig.skip_binder().inputs().as_slice()
+     |                                                                     ^^^^^^^^
+     |
+     = help: call with fully qualified syntax `rustc_type_ir::inherent::SliceLike::as_slice(...)` to keep using the current method
+     = warning: once this associated item is added to the standard library, the ambiguity may cause an error or change in behavior!
+     = note: for more information, see issue #48919 <https://github.com/rust-lang/rust/issues/48919>
+help: add `#![feature(str_as_str)]` to the crate attributes to enable `core::slice::<impl [T]>::as_slice`
+    -->  crates/hir-ty-borrowck/src/lib.rs:8:1
+     |
+   8 + #![feature(str_as_str)]
+     |
+
+warning: a method with this name may be added to the standard library in the future
+    --> crates/hir-ty-borrowck/src/regions.rs:5009:61
+     |
+5009 | ...                   && let &[tupled] = sig.inputs().as_slice()
+     |                                                       ^^^^^^^^
+     |
+     = help: call with fully qualified syntax `rustc_type_ir::inherent::SliceLike::as_slice(...)` to keep using the current method
+     = warning: once this associated item is added to the standard library, the ambiguity may cause an error or change in behavior!
+     = note: for more information, see issue #48919 <https://github.com/rust-lang/rust/issues/48919>
+help: add `#![feature(str_as_str)]` to the crate attributes to enable `core::slice::<impl [T]>::as_slice`
+    -->  crates/hir-ty-borrowck/src/lib.rs:8:1
+     |
+   8 + #![feature(str_as_str)]
+     |
+
+warning: a method with this name may be added to the standard library in the future
+    --> crates/hir-ty-borrowck/src/regions.rs:5673:53
+     |
+5673 |                     if let &[tupled] = sig.inputs().as_slice()
+     |                                                     ^^^^^^^^
+     |
+     = help: call with fully qualified syntax `rustc_type_ir::inherent::SliceLike::as_slice(...)` to keep using the current method
+     = warning: once this associated item is added to the standard library, the ambiguity may cause an error or change in behavior!
+     = note: for more information, see issue #48919 <https://github.com/rust-lang/rust/issues/48919>
+help: add `#![feature(str_as_str)]` to the crate attributes to enable `core::slice::<impl [T]>::as_slice`
+    -->  crates/hir-ty-borrowck/src/lib.rs:8:1
+     |
+   8 + #![feature(str_as_str)]
+     |
+
+warning: a method with this name may be added to the standard library in the future
+    --> crates/hir-ty-borrowck/src/regions.rs:1777:52
+     |
+1777 |         let &[tupled] = sig.skip_binder().inputs().as_slice() else { return false };
+     |                                                    ^^^^^^^^
+     |
+     = help: call with fully qualified syntax `rustc_type_ir::inherent::SliceLike::as_slice(...)` to keep using the current method
+     = warning: once this associated item is added to the standard library, the ambiguity may cause an error or change in behavior!
+     = note: for more information, see issue #48919 <https://github.com/rust-lang/rust/issues/48919>
+help: add `#![feature(str_as_str)]` to the crate attributes to enable `core::slice::<impl [T]>::as_slice`
+    -->  crates/hir-ty-borrowck/src/lib.rs:8:1
+     |
+   8 + #![feature(str_as_str)]
+     |
+
+warning: a method with this name may be added to the standard library in the future
+    --> crates/hir-ty-borrowck/src/regions.rs:1804:38
+     |
+1804 |         let &[tupled] = sig.inputs().as_slice() else { return false };
+     |                                      ^^^^^^^^
+     |
+     = help: call with fully qualified syntax `rustc_type_ir::inherent::SliceLike::as_slice(...)` to keep using the current method
+     = warning: once this associated item is added to the standard library, the ambiguity may cause an error or change in behavior!
+     = note: for more information, see issue #48919 <https://github.com/rust-lang/rust/issues/48919>
+help: add `#![feature(str_as_str)]` to the crate attributes to enable `core::slice::<impl [T]>::as_slice`
+    -->  crates/hir-ty-borrowck/src/lib.rs:8:1
+     |
+   8 + #![feature(str_as_str)]
+     |
+
+warning: a method with this name may be added to the standard library in the future
+    --> crates/hir-ty-borrowck/src/regions.rs:5256:67
+     |
+5256 |                         lifetimes(args.as_closure().parent_args().as_slice()),
+     |                                                                   ^^^^^^^^
+     |
+     = help: call with fully qualified syntax `rustc_type_ir::inherent::SliceLike::as_slice(...)` to keep using the current method
+     = warning: once this associated item is added to the standard library, the ambiguity may cause an error or change in behavior!
+     = note: for more information, see issue #48919 <https://github.com/rust-lang/rust/issues/48919>
+help: add `#![feature(str_as_str)]` to the crate attributes to enable `core::slice::<impl [T]>::as_slice`
+    -->  crates/hir-ty-borrowck/src/lib.rs:8:1
+     |
+   8 + #![feature(str_as_str)]
+     |
+
+warning: a method with this name may be added to the standard library in the future
+    --> crates/hir-ty-borrowck/src/regions.rs:5263:77
+     |
+5263 |                         lifetimes(args.as_coroutine_closure().parent_args().as_slice()),
+     |                                                                             ^^^^^^^^
+     |
+     = help: call with fully qualified syntax `rustc_type_ir::inherent::SliceLike::as_slice(...)` to keep using the current method
+     = warning: once this associated item is added to the standard library, the ambiguity may cause an error or change in behavior!
+     = note: for more information, see issue #48919 <https://github.com/rust-lang/rust/issues/48919>
+help: add `#![feature(str_as_str)]` to the crate attributes to enable `core::slice::<impl [T]>::as_slice`
+    -->  crates/hir-ty-borrowck/src/lib.rs:8:1
+     |
+   8 + #![feature(str_as_str)]
+     |
+
+warning: a method with this name may be added to the standard library in the future
+    --> crates/hir-ty-borrowck/src/regions.rs:5278:73
+     |
+5278 | ...                   lifetimes(args.as_coroutine().parent_args().as_slice()),
+     |                                                                   ^^^^^^^^
+     |
+     = help: call with fully qualified syntax `rustc_type_ir::inherent::SliceLike::as_slice(...)` to keep using the current method
+     = warning: once this associated item is added to the standard library, the ambiguity may cause an error or change in behavior!
+     = note: for more information, see issue #48919 <https://github.com/rust-lang/rust/issues/48919>
+help: add `#![feature(str_as_str)]` to the crate attributes to enable `core::slice::<impl [T]>::as_slice`
+    -->  crates/hir-ty-borrowck/src/lib.rs:8:1
+     |
+   8 + #![feature(str_as_str)]
+     |
+
+warning: variable does not need to be mutable
+   --> crates/hir-ty-borrowck/src/lib.rs:109:9
+    |
+109 |     let mut result = BorrowckResult::default();
+    |         ----^^^^^^
+    |         |
+    |         help: remove this `mut`
+    |
+    = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `projection`
+    --> crates/hir-ty-borrowck/src/regions.rs:4173:13
+     |
+4173 |         let projection = place.projection.as_slice();
+     |             ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_projection`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: variable does not need to be mutable
+    --> crates/hir-ty-borrowck/src/regions.rs:3658:21
+     |
+3658 |                 let mut pass = |this: &mut Self, general_is_b: bool| {
+     |                     ----^^^^
+     |                     |
+     |                     help: remove this `mut`
+
+warning: variable does not need to be mutable
+    --> crates/hir-ty-borrowck/src/regions.rs:3545:13
+     |
+3545 |         let mut rv = |this: &mut Self, region: Region<'db>| match region.kind() {
+     |             ----^^
+     |             |
+     |             help: remove this `mut`
+
+warning: method `contains_point` is never used
+  --> crates/hir-ty-borrowck/src/inference.rs:22:19
+   |
+21 | impl RegionValues {
+   | ----------------- method in this implementation
+22 |     pub(super) fn contains_point(&self, rv: Rv, point: usize) -> bool {
+   |                   ^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `is_empty` is never used
+  --> crates/hir-ty-borrowck/src/bitset.rs:64:19
+   |
+ 8 | impl BitSet {
+   | ----------- method in this implementation
+...
+64 |     pub(super) fn is_empty(&self) -> bool {
+   |                   ^^^^^^^^
+
+warning: variant `Internal` is never constructed
+  --> crates/hir-ty-borrowck/src/regions.rs:88:5
+   |
+75 | pub(super) enum Category {
+   |                 -------- variant in this enum
+...
+88 |     Internal,
+   |     ^^^^^^^^
+   |
+   = note: `Category` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: variant `ExceptUpvars` is never constructed
+   --> crates/hir-ty-borrowck/src/check.rs:605:5
+    |
+603 | enum Allowed {
+    |      ------- variant in this enum
+604 |     Yes,
+605 |     ExceptUpvars,
+    |     ^^^^^^^^^^^^
+    |
+    = note: `Allowed` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: method `insert` is never used
+  --> crates/hir-ty-borrowck/src/intervals.rs:29:19
+   |
+13 | impl IntervalSet {
+   | ---------------- method in this implementation
+...
+29 |     pub(super) fn insert(&mut self, point: usize) -> bool {
+   |                   ^^^^^^
+
+warning: method `is_ancestor_or_self` is never used
+   --> crates/hir-ty-borrowck/src/moves.rs:375:19
+    |
+ 90 | impl MoveData {
+    | ------------- method in this implementation
+...
+375 |     pub(super) fn is_ancestor_or_self(&self, ancestor: Mpi, mut path: Mpi) -> bool {
+    |                   ^^^^^^^^^^^^^^^^^^^
+
+   Compiling hir-ty-codegen v0.0.0 (/srv/build/blaze-src/crates/hir-ty-codegen)
+warning: `hir-ide` (lib) generated 2 warnings (run `cargo fix --lib -p hir-ide` to apply 2 suggestions)
+warning: `hir-ty-borrowck` (lib) generated 21 warnings (run `cargo fix --lib -p hir-ty-borrowck` to apply 6 suggestions)
+warning: unused extern crate
+  --> crates/hir/src/lib.rs:23:1
+   |
+23 | extern crate rustc_type_ir;
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+   |
+   = note: requested on the command line with `-W unused-extern-crates`
+help: remove the unused `extern crate`
+   |
+23 - extern crate rustc_type_ir;
+   |
+
+warning: `hir` (lib) generated 1 warning (run `cargo fix --lib -p hir` to apply 1 suggestion)
+warning: `extern crate` is not idiomatic in the new edition
+ --> crates/hir-ty-codegen/mod.rs:8:1
+  |
+8 | extern crate rustc_abi;
+  | ^^^^^^^^^^^^^^^^^^^^^^^
+  |
+  = note: requested on the command line with `-W unused-extern-crates`
+help: convert it to a `use`
+  |
+8 - extern crate rustc_abi;
+8 + use rustc_abi;
+  |
+
+warning: unused extern crate
+ --> crates/hir-ty-codegen/mod.rs:9:1
+  |
+9 | extern crate rustc_type_ir;
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+  |
+help: remove the unused `extern crate`
+  |
+9 - extern crate rustc_type_ir;
+  |
+
+warning: unnecessary parentheses around pattern
+   --> crates/hir-ty-codegen/avx512.rs:125:15
+    |
+125 |         Some(&(last @ ("128" | "256" | "512"))) => {
+    |               ^                              ^
+    |
+    = note: `#[warn(unused_parens)]` (part of `#[warn(unused)]`) on by default
+help: remove these parentheses
+    |
+125 -         Some(&(last @ ("128" | "256" | "512"))) => {
+125 +         Some(&last @ ("128" | "256" | "512")) => {
+    |
+
+warning: unused import: `GenericArgs as _`
+  --> crates/hir-ty-codegen/fncache/dispatch.rs:31:31
+   |
+31 | use rustc_type_ir::inherent::{GenericArgs as _, IntoKind};
+   |                               ^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `GenericArgs as _`
+  --> crates/hir-ty-codegen/sve.rs:31:31
+   |
+31 | use rustc_type_ir::inherent::{GenericArgs as _, IntoKind, SliceLike as _};
+   |                               ^^^^^^^^^^^^^^^^
+
+warning: hidden lifetime parameters in types are deprecated
+     --> crates/hir-ty-codegen/mod.rs:11529:28
+      |
+11529 |         let rva = |b: &mut FunctionBuilder, address: Value| {
+      |                            ^^^^^^^^^^^^^^^ expected lifetime parameter
+      |
+      = note: requested on the command line with `-W elided-lifetimes-in-paths`
+help: indicate the anonymous lifetime
+      |
+11529 |         let rva = |b: &mut FunctionBuilder<'_>, address: Value| {
+      |                                           ++++
+
+warning: hidden lifetime parameters in types are deprecated
+     --> crates/hir-ty-codegen/mod.rs:12995:33
+      |
+12995 |     fn names_are_written(body: &MirBody) -> bool {
+      |                                 ^^^^^^^ expected lifetime parameter
+      |
+help: indicate the anonymous lifetime
+      |
+12995 |     fn names_are_written(body: &MirBody<'_>) -> bool {
+      |                                        ++++
+
+warning: hidden lifetime parameters in types are deprecated
+     --> crates/hir-ty-codegen/mod.rs:13002:48
+      |
+13002 |     fn note_passed_in_memory(&mut self, body: &MirBody, local: LocalId, addr: Value) {
+      |                                                ^^^^^^^ expected lifetime parameter
+      |
+help: indicate the anonymous lifetime
+      |
+13002 |     fn note_passed_in_memory(&mut self, body: &MirBody<'_>, local: LocalId, addr: Value) {
+      |                                                       ++++
+
+warning: hidden lifetime parameters in types are deprecated
+     --> crates/hir-ty-codegen/mod.rs:16623:32
+      |
+16623 |         let combine = |b: &mut FunctionBuilder, l: Value, r: Value| match &op[..op.len() - 1] {
+      |                                ^^^^^^^^^^^^^^^ expected lifetime parameter
+      |
+help: indicate the anonymous lifetime
+      |
+16623 |         let combine = |b: &mut FunctionBuilder<'_>, l: Value, r: Value| match &op[..op.len() - 1] {
+      |                                               ++++
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::iadd_imm`: use `iadd_imm_s` (sign-extends the immediate) or `iadd_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:18314:36
+      |
+18314 |                 self.builder.ins().iadd_imm(addr, layout.fields.offset(i).bytes() as i64);
+      |                                    ^^^^^^^^
+      |
+      = note: `#[warn(deprecated)]` on by default
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::ishl_imm`: use `ishl_imm_s` (sign-extends the immediate) or `ishl_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:11937:48
+      |
+11937 |                     value = self.builder.ins().ishl_imm(value, (i * bits) as i64);
+      |                                                ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::iadd_imm`: use `iadd_imm_s` (sign-extends the immediate) or `iadd_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:17128:41
+      |
+17128 |             let to = self.builder.ins().iadd_imm(slot, i64::from(at));
+      |                                         ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::iadd_imm`: use `iadd_imm_s` (sign-extends the immediate) or `iadd_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:14171:60
+      |
+14171 | ...                   let field = self.builder.ins().iadd_imm(dst, offset);
+      |                                                      ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::icmp_imm`: use `icmp_imm_s` (sign-extends the immediate) or `icmp_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:13165:53
+      |
+13165 |                     let failed = self.builder.ins().icmp_imm(cc, holds, 0);
+      |                                                     ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::iadd_imm`: use `iadd_imm_s` (sign-extends the immediate) or `iadd_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:10593:44
+      |
+10593 |                         self.builder.ins().iadd_imm(len, -(*offset as i64))
+      |                                            ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::iadd_imm`: use `iadd_imm_s` (sign-extends the immediate) or `iadd_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:15224:47
+      |
+15224 |                 let slot = self.builder.ins().iadd_imm(after, bytes - 1);
+      |                                               ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::imul_imm`: use `imul_imm_s` (sign-extends the immediate) or `imul_imm_u` (zero-extends the immediate) instead
+    --> crates/hir-ty-codegen/mod.rs:8338:47
+     |
+8338 |                 let size = self.builder.ins().imul_imm(meta, elem.size.bytes() as i64);
+     |                                               ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::band_imm`: use `band_imm_s` (sign-extends the immediate) or `band_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:15225:47
+      |
+15225 |                 let slot = self.builder.ins().band_imm(slot, -bytes);
+      |                                               ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::iadd_imm`: use `iadd_imm_s` (sign-extends the immediate) or `iadd_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:15226:47
+      |
+15226 |                 let next = self.builder.ins().iadd_imm(slot, bytes);
+      |                                               ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::iadd_imm`: use `iadd_imm_s` (sign-extends the immediate) or `iadd_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:10603:47
+      |
+10603 |                     addr = self.builder.ins().iadd_imm(addr, (*from * size) as i64);
+      |                                               ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::iadd_imm`: use `iadd_imm_s` (sign-extends the immediate) or `iadd_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:10606:53
+      |
+10606 | ...                   Some(self.builder.ins().iadd_imm(len, -((*from + *to) as i64)))
+      |                                               ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::iadd_imm`: use `iadd_imm_s` (sign-extends the immediate) or `iadd_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:15252:47
+      |
+15252 |                     slot = self.builder.ins().iadd_imm(slot, bytes - 1);
+      |                                               ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::band_imm`: use `band_imm_s` (sign-extends the immediate) or `band_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:15253:47
+      |
+15253 |                     slot = self.builder.ins().band_imm(slot, -bytes);
+      |                                               ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::iadd_imm`: use `iadd_imm_s` (sign-extends the immediate) or `iadd_imm_u` (zero-extends the immediate) instead
+    --> crates/hir-ty-codegen/mod.rs:9425:47
+     |
+9425 |                 let rest = self.builder.ins().iadd_imm(addr, 8);
+     |                                               ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::iadd_imm`: use `iadd_imm_s` (sign-extends the immediate) or `iadd_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:15256:47
+      |
+15256 |                 let next = self.builder.ins().iadd_imm(slot, step);
+      |                                               ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::imul_imm`: use `imul_imm_s` (sign-extends the immediate) or `imul_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:10640:41
+      |
+10640 |         let offset = self.builder.ins().imul_imm(index, size as i64);
+      |                                         ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::iadd_imm`: use `iadd_imm_s` (sign-extends the immediate) or `iadd_imm_u` (zero-extends the immediate) instead
+    --> crates/hir-ty-codegen/mod.rs:9434:51
+     |
+9434 |                     let part = self.builder.ins().iadd_imm(addr, (index * step) as i64);
+     |                                                   ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::iadd_imm`: use `iadd_imm_s` (sign-extends the immediate) or `iadd_imm_u` (zero-extends the immediate) instead
+    --> crates/hir-ty-codegen/mod.rs:8385:39
+     |
+8385 |         let mask = self.builder.ins().iadd_imm(align, -1);
+     |                                       ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::iadd_imm`: use `iadd_imm_s` (sign-extends the immediate) or `iadd_imm_u` (zero-extends the immediate) instead
+    --> crates/hir-ty-codegen/mod.rs:8406:42
+     |
+8406 |             return Ok(self.builder.ins().iadd_imm(addr, offset.bytes() as i64));
+     |                                          ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::icmp_imm`: use `icmp_imm_s` (sign-extends the immediate) or `icmp_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:15296:44
+      |
+15296 |                         self.builder.ins().icmp_imm(IntCC::SignedGreaterThanOrEqual, offset, 0);
+      |                                            ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::iadd_imm`: use `iadd_imm_s` (sign-extends the immediate) or `iadd_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:15303:57
+      |
+15303 | ...                   let up = self.builder.ins().iadd_imm(offset, 15);
+      |                                                   ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::band_imm`: use `band_imm_s` (sign-extends the immediate) or `band_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:15304:48
+      |
+15304 | ...                   self.builder.ins().band_imm(up, -16)
+      |                                          ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::iadd_imm`: use `iadd_imm_s` (sign-extends the immediate) or `iadd_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:15308:51
+      |
+15308 |                     let next = self.builder.ins().iadd_imm(offset, i64::from(step));
+      |                                                   ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::icmp_imm`: use `icmp_imm_s` (sign-extends the immediate) or `icmp_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:15310:51
+      |
+15310 |                     let fits = self.builder.ins().icmp_imm(IntCC::SignedLessThanOrEqual, next, 0);
+      |                                                   ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::iadd_imm`: use `iadd_imm_s` (sign-extends the immediate) or `iadd_imm_u` (zero-extends the immediate) instead
+    --> crates/hir-ty-codegen/mod.rs:9469:60
+     |
+9469 | ...                   values.push(self.builder.ins().iadd_imm(addr, at as i64));
+     |                                                      ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::band_imm`: use `band_imm_s` (sign-extends the immediate) or `band_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:17193:51
+      |
+17193 |                     let slot = self.builder.ins().band_imm(index, 0x0f);
+      |                                                   ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::icmp_imm`: use `icmp_imm_s` (sign-extends the immediate) or `icmp_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:17198:54
+      |
+17198 |                     let cleared = self.builder.ins().icmp_imm(IntCC::SignedLessThan, index, 0);
+      |                                                      ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::icmp_imm`: use `icmp_imm_s` (sign-extends the immediate) or `icmp_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:15328:51
+      |
+15328 |                     let fits = self.builder.ins().icmp_imm(
+      |                                                   ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::iadd_imm`: use `iadd_imm_s` (sign-extends the immediate) or `iadd_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:12077:58
+      |
+12077 |                         let element = self.builder.ins().iadd_imm(dst, (i * size.bytes()) as i64);
+      |                                                          ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::iadd_imm`: use `iadd_imm_s` (sign-extends the immediate) or `iadd_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:15339:51
+      |
+15339 |                     let next = self.builder.ins().iadd_imm(offset, i64::from(step));
+      |                                                   ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::band_imm`: use `band_imm_s` (sign-extends the immediate) or `band_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:17220:55
+      |
+17220 |                         let slot = self.builder.ins().band_imm(index, lanes - 1);
+      |                                                       ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::imul_imm`: use `imul_imm_s` (sign-extends the immediate) or `imul_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:17225:57
+      |
+17225 |                         let offset = self.builder.ins().imul_imm(slot, bytes);
+      |                                                         ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::iadd_imm`: use `iadd_imm_s` (sign-extends the immediate) or `iadd_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:15349:53
+      |
+15349 |                         let up = self.builder.ins().iadd_imm(from, 15);
+      |                                                     ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::icmp_imm`: use `icmp_imm_s` (sign-extends the immediate) or `icmp_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:12090:44
+      |
+12090 |                         self.builder.ins().icmp_imm(IntCC::UnsignedLessThan, index, len as i64);
+      |                                            ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::band_imm`: use `band_imm_s` (sign-extends the immediate) or `band_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:15350:44
+      |
+15350 |                         self.builder.ins().band_imm(up, -16)
+      |                                            ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::iadd_imm`: use `iadd_imm_s` (sign-extends the immediate) or `iadd_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:15354:47
+      |
+15354 |                 let next = self.builder.ins().iadd_imm(from, if wide { 16 } else { 8 });
+      |                                               ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::imul_imm`: use `imul_imm_s` (sign-extends the immediate) or `imul_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:12093:53
+      |
+12093 |                     let offset = self.builder.ins().imul_imm(index, size.bytes() as i64);
+      |                                                     ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::iadd_imm`: use `iadd_imm_s` (sign-extends the immediate) or `iadd_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:12096:51
+      |
+12096 |                     let next = self.builder.ins().iadd_imm(index, 1);
+      |                                                   ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::iadd_imm`: use `iadd_imm_s` (sign-extends the immediate) or `iadd_imm_u` (zero-extends the immediate) instead
+    --> crates/hir-ty-codegen/mod.rs:9526:47
+     |
+9526 |                 let rest = self.builder.ins().iadd_imm(addr, 8);
+     |                                               ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::imul_imm`: use `imul_imm_s` (sign-extends the immediate) or `imul_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:18522:52
+      |
+18522 |                     let bytes = self.builder.ins().imul_imm(len, size);
+      |                                                    ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::band_imm`: use `band_imm_s` (sign-extends the immediate) or `band_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:17241:55
+      |
+17241 |                         let slot = self.builder.ins().band_imm(index, 7);
+      |                                                       ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::ishl_imm`: use `ishl_imm_s` (sign-extends the immediate) or `ishl_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:17243:57
+      |
+17243 |                         let offset = self.builder.ins().ishl_imm(slot, 2);
+      |                                                         ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::icmp_imm`: use `icmp_imm_s` (sign-extends the immediate) or `icmp_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:18524:51
+      |
+18524 |                     let same = self.builder.ins().icmp_imm(IntCC::Equal, order, 0);
+      |                                                   ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::iadd_imm`: use `iadd_imm_s` (sign-extends the immediate) or `iadd_imm_u` (zero-extends the immediate) instead
+    --> crates/hir-ty-codegen/mod.rs:9536:51
+     |
+9536 |                     let part = self.builder.ins().iadd_imm(addr, (index * step) as i64);
+     |                                                   ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::bxor_imm`: use `bxor_imm_s` (sign-extends the immediate) or `bxor_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:12122:64
+      |
+12122 |                     UnOp::Not if is_bool => self.builder.ins().bxor_imm(value, 1),
+      |                                                                ^^^^^^^^
+
+warning: a method with this name may be added to the standard library in the future
+     --> crates/hir-ty-codegen/mod.rs:14229:78
+      |
+14229 |         let &[main_param, argc_ty, argv_ty, sigpipe_ty] = start_sig.inputs().as_slice() else {
+      |                                                                              ^^^^^^^^
+      |
+      = help: call with fully qualified syntax `rustc_type_ir::inherent::SliceLike::as_slice(...)` to keep using the current method
+      = warning: once this associated item is added to the standard library, the ambiguity may cause an error or change in behavior!
+      = note: for more information, see issue #48919 <https://github.com/rust-lang/rust/issues/48919>
+      = note: `#[warn(unstable_name_collisions)]` (part of `#[warn(future_incompatible)]`) on by default
+help: add `#![feature(str_as_str)]` to the crate attributes to enable `core::slice::<impl [T]>::as_slice`
+      |
+    6 + #![feature(str_as_str)]
+      |
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::imul_imm`: use `imul_imm_s` (sign-extends the immediate) or `imul_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:18539:49
+      |
+18539 |                 let offset = self.builder.ins().imul_imm(index, size);
+      |                                                 ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::iadd_imm`: use `iadd_imm_s` (sign-extends the immediate) or `iadd_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:13300:49
+      |
+13300 |                 values.push((self.builder.ins().iadd_imm(tuple_addr, offset), ty));
+      |                                                 ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::iadd_imm`: use `iadd_imm_s` (sign-extends the immediate) or `iadd_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:18543:47
+      |
+18543 |                 let next = self.builder.ins().iadd_imm(index, 1);
+      |                                               ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::iadd_imm`: use `iadd_imm_s` (sign-extends the immediate) or `iadd_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:18552:48
+      |
+18552 |                     let l = self.builder.ins().iadd_imm(l, offset);
+      |                                                ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::iadd_imm`: use `iadd_imm_s` (sign-extends the immediate) or `iadd_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:18553:48
+      |
+18553 |                     let r = self.builder.ins().iadd_imm(r, offset);
+      |                                                ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::iadd_imm`: use `iadd_imm_s` (sign-extends the immediate) or `iadd_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:12176:48
+      |
+12176 | ...                   self.builder.ins().iadd_imm(dst, (i as u64 * size.bytes()) as i64);
+      |                                          ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::imul_imm`: use `imul_imm_s` (sign-extends the immediate) or `imul_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:15487:48
+      |
+15487 |                 let bytes = self.builder.ins().imul_imm(count, size);
+      |                                                ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::iadd_imm`: use `iadd_imm_s` (sign-extends the immediate) or `iadd_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:13388:33
+      |
+13388 |             (self.builder.ins().iadd_imm(tuple, offset), field)
+      |                                 ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::imul_imm`: use `imul_imm_s` (sign-extends the immediate) or `imul_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:15516:48
+      |
+15516 |                 let bytes = self.builder.ins().imul_imm(count, size);
+      |                                                ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::iadd_imm`: use `iadd_imm_s` (sign-extends the immediate) or `iadd_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:11533:43
+      |
+11533 |         let (array, catchable) = (b.ins().iadd_imm(info, 16), b.ins().iadd_imm(info, 24));
+      |                                           ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::iadd_imm`: use `iadd_imm_s` (sign-extends the immediate) or `iadd_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:11533:71
+      |
+11533 |         let (array, catchable) = (b.ins().iadd_imm(info, 16), b.ins().iadd_imm(info, 24));
+      |                                                                       ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::iadd_imm`: use `iadd_imm_s` (sign-extends the immediate) or `iadd_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:13400:44
+      |
+13400 |             let field = self.builder.ins().iadd_imm(tuple, offset);
+      |                                            ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::iadd_imm`: use `iadd_imm_s` (sign-extends the immediate) or `iadd_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:18716:40
+      |
+18716 |             let l = self.builder.ins().iadd_imm(l, offset);
+      |                                        ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::icmp_imm`: use `icmp_imm_s` (sign-extends the immediate) or `icmp_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:15551:48
+      |
+15551 |                     value = self.builder.ins().icmp_imm(IntCC::Equal, value, 0);
+      |                                                ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::iadd_imm`: use `iadd_imm_s` (sign-extends the immediate) or `iadd_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:18717:40
+      |
+18717 |             let r = self.builder.ins().iadd_imm(r, offset);
+      |                                        ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::icmp_imm`: use `icmp_imm_s` (sign-extends the immediate) or `icmp_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:17390:47
+      |
+17390 |                 let over = self.builder.ins().icmp_imm(IntCC::UnsignedGreaterThan, count, 15);
+      |                                               ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::iadd_imm`: use `iadd_imm_s` (sign-extends the immediate) or `iadd_imm_u` (zero-extends the immediate) instead
+    --> crates/hir-ty-codegen/mod.rs:9788:41
+     |
+9788 |         let bumped = self.builder.ins().iadd_imm(base, align as i64 - 1);
+     |                                         ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::band_imm`: use `band_imm_s` (sign-extends the immediate) or `band_imm_u` (zero-extends the immediate) instead
+    --> crates/hir-ty-codegen/mod.rs:9789:28
+     |
+9789 |         self.builder.ins().band_imm(bumped, -(align as i64))
+     |                            ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::icmp_imm`: use `icmp_imm_s` (sign-extends the immediate) or `icmp_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:12348:59
+      |
+12348 |                         let is_niche = self.builder.ins().icmp_imm(
+      |                                                           ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::iadd_imm`: use `iadd_imm_s` (sign-extends the immediate) or `iadd_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:12363:56
+      |
+12363 |                         let niche = self.builder.ins().iadd_imm(relative, first as i64);
+      |                                                        ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::iadd_imm`: use `iadd_imm_s` (sign-extends the immediate) or `iadd_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:14431:49
+      |
+14431 |                     let at = self.builder.ins().iadd_imm(tuple, offset);
+      |                                                 ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::icmp_imm`: use `icmp_imm_s` (sign-extends the immediate) or `icmp_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:15694:53
+      |
+15694 |                     let chosen = self.builder.ins().icmp_imm(IntCC::SignedLessThan, chosen, 0);
+      |                                                     ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::iadd_imm`: use `iadd_imm_s` (sign-extends the immediate) or `iadd_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:13514:60
+      |
+13514 | ...                   let field = self.builder.ins().iadd_imm(dst, offset);
+      |                                                      ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::iadd_imm`: use `iadd_imm_s` (sign-extends the immediate) or `iadd_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:12443:44
+      |
+12443 |             let field = self.builder.ins().iadd_imm(dst, layout.fields.offset(i).bytes() as i64);
+      |                                            ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::ushr_imm`: use `ushr_imm_s` (sign-extends the immediate) or `ushr_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:15711:54
+      |
+15711 |                         let bit = self.builder.ins().ushr_imm(byte, (i % 8) as i64);
+      |                                                      ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::band_imm`: use `band_imm_s` (sign-extends the immediate) or `band_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:15712:54
+      |
+15712 |                         let bit = self.builder.ins().band_imm(bit, 1);
+      |                                                      ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::iadd_imm`: use `iadd_imm_s` (sign-extends the immediate) or `iadd_imm_u` (zero-extends the immediate) instead
+    --> crates/hir-ty-codegen/mod.rs:9914:44
+     |
+9914 |             let first = self.builder.ins().iadd_imm(stack, first);
+     |                                            ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::ushr_imm`: use `ushr_imm_s` (sign-extends the immediate) or `ushr_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:17537:57
+      |
+17537 |                         let chosen = self.builder.ins().ushr_imm(table, minterm);
+      |                                                         ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::band_imm`: use `band_imm_s` (sign-extends the immediate) or `band_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:17538:57
+      |
+17538 |                         let chosen = self.builder.ins().band_imm(chosen, 1);
+      |                                                         ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::iadd_imm`: use `iadd_imm_s` (sign-extends the immediate) or `iadd_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:18881:53
+      |
+18881 |                 let field_addr = this.builder.ins().iadd_imm(addr, offset.bytes() as i64);
+      |                                                     ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::band_imm`: use `band_imm_s` (sign-extends the immediate) or `band_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:17561:48
+      |
+17561 |                     let x = self.builder.ins().band_imm(x, LOW_52);
+      |                                                ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::band_imm`: use `band_imm_s` (sign-extends the immediate) or `band_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:17562:48
+      |
+17562 |                     let y = self.builder.ins().band_imm(y, LOW_52);
+      |                                                ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::ishl_imm`: use `ishl_imm_s` (sign-extends the immediate) or `ishl_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:17566:56
+      |
+17566 |                         let upper = self.builder.ins().ishl_imm(upper, 12);
+      |                                                        ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::ushr_imm`: use `ushr_imm_s` (sign-extends the immediate) or `ushr_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:17567:56
+      |
+17567 |                         let lower = self.builder.ins().ushr_imm(low, 52);
+      |                                                        ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::band_imm`: use `band_imm_s` (sign-extends the immediate) or `band_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:17570:44
+      |
+17570 |                         self.builder.ins().band_imm(low, LOW_52)
+      |                                            ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::iadd_imm`: use `iadd_imm_s` (sign-extends the immediate) or `iadd_imm_u` (zero-extends the immediate) instead
+    --> crates/hir-ty-codegen/mod.rs:9954:48
+     |
+9954 |                 let stack = self.builder.ins().iadd_imm(frame, 16 + i64::from(named.stack));
+     |                                                ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::iadd_imm`: use `iadd_imm_s` (sign-extends the immediate) or `iadd_imm_u` (zero-extends the immediate) instead
+    --> crates/hir-ty-codegen/mod.rs:9955:51
+     |
+9955 |                 let ints_end = self.builder.ins().iadd_imm(saved, i64::from(int_count * 8));
+     |                                                   ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::iadd_imm`: use `iadd_imm_s` (sign-extends the immediate) or `iadd_imm_u` (zero-extends the immediate) instead
+    --> crates/hir-ty-codegen/mod.rs:9957:40
+     |
+9957 |                     self.builder.ins().iadd_imm(saved, i64::from(int_count * 8 + floats_bytes));
+     |                                        ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::imul_imm`: use `imul_imm_s` (sign-extends the immediate) or `imul_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:15783:49
+      |
+15783 |                 let offset = self.builder.ins().imul_imm(index, lane.ty.bytes() as i64);
+      |                                                 ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::iadd_imm`: use `iadd_imm_s` (sign-extends the immediate) or `iadd_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:11680:45
+      |
+11680 |                 let to = self.builder.ins().iadd_imm(slot, *offset as i64);
+      |                                             ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::iadd_imm`: use `iadd_imm_s` (sign-extends the immediate) or `iadd_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:18895:49
+      |
+18895 |             let field_addr = this.builder.ins().iadd_imm(addr, offset);
+      |                                                 ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::icmp_imm`: use `icmp_imm_s` (sign-extends the immediate) or `icmp_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:12624:41
+      |
+12624 |         let beyond = self.builder.ins().icmp_imm(IntCC::NotEqual, high, 0);
+      |                                         ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::imul_imm`: use `imul_imm_s` (sign-extends the immediate) or `imul_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:15796:49
+      |
+15796 |                 let offset = self.builder.ins().imul_imm(index, lane.ty.bytes() as i64);
+      |                                                 ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::iadd_imm`: use `iadd_imm_s` (sign-extends the immediate) or `iadd_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:11702:47
+      |
+11702 |                 let from = self.builder.ins().iadd_imm(slot, *offset as i64);
+      |                                               ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::iadd_imm`: use `iadd_imm_s` (sign-extends the immediate) or `iadd_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:13618:45
+      |
+13618 |             fields.push((self.builder.ins().iadd_imm(closure, offset), ty));
+      |                                             ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::iadd_imm`: use `iadd_imm_s` (sign-extends the immediate) or `iadd_imm_u` (zero-extends the immediate) instead
+    --> crates/hir-ty-codegen/mod.rs:9990:44
+     |
+9990 |             let stack = self.builder.ins().iadd_imm(frame, 16 + i64::from(named));
+     |                                            ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::iadd_imm`: use `iadd_imm_s` (sign-extends the immediate) or `iadd_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:13622:44
+      |
+13622 |             let field = self.builder.ins().iadd_imm(dst, layout.fields.offset(i).bytes() as i64);
+      |                                            ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::iadd_imm`: use `iadd_imm_s` (sign-extends the immediate) or `iadd_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:15816:48
+      |
+15816 |                 let upper = self.builder.ins().iadd_imm(both, layout.size.bytes() as i64);
+      |                                                ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::imul_imm`: use `imul_imm_s` (sign-extends the immediate) or `imul_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:15822:53
+      |
+15822 |                     let offset = self.builder.ins().imul_imm(index, lane_size as i64);
+      |                                                     ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::iadd_imm`: use `iadd_imm_s` (sign-extends the immediate) or `iadd_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:13636:40
+      |
+13636 |         let state = self.builder.ins().iadd_imm(dst, state as i64);
+      |                                        ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::ushr_imm`: use `ushr_imm_s` (sign-extends the immediate) or `ushr_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:17634:51
+      |
+17634 |                     let chosen = fx.builder.ins().ushr_imm(halves, bit);
+      |                                                   ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::band_imm`: use `band_imm_s` (sign-extends the immediate) or `band_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:17635:51
+      |
+17635 |                     let chosen = fx.builder.ins().band_imm(chosen, 1);
+      |                                                   ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::ishl_imm`: use `ishl_imm_s` (sign-extends the immediate) or `ishl_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:17637:38
+      |
+17637 |                     fx.builder.ins().ishl_imm(chosen, 3)
+      |                                      ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::iadd_imm`: use `iadd_imm_s` (sign-extends the immediate) or `iadd_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:10028:32
+      |
+10028 |             this.builder.ins().iadd_imm(*addr, layout.fields.offset(field).bytes() as i64)
+      |                                ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::ushr_imm`: use `ushr_imm_s` (sign-extends the immediate) or `ushr_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:17649:54
+      |
+17649 |                         let set = self.builder.ins().ushr_imm(r, bit);
+      |                                                      ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::band_imm`: use `band_imm_s` (sign-extends the immediate) or `band_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:17650:54
+      |
+17650 |                         let set = self.builder.ins().band_imm(set, 1);
+      |                                                      ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::ishl_imm`: use `ishl_imm_s` (sign-extends the immediate) or `ishl_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:17652:55
+      |
+17652 |                         let part = self.builder.ins().ishl_imm(l, bit);
+      |                                                       ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::iadd_imm`: use `iadd_imm_s` (sign-extends the immediate) or `iadd_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:14642:50
+      |
+14642 |                     let src = self.builder.ins().iadd_imm(src, offset);
+      |                                                  ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::ushr_imm`: use `ushr_imm_s` (sign-extends the immediate) or `ushr_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:17656:59
+      |
+17656 | ...                   let part = self.builder.ins().ushr_imm(l, 64 - bit);
+      |                                                     ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::iadd_imm`: use `iadd_imm_s` (sign-extends the immediate) or `iadd_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:14643:51
+      |
+14643 |                     let part = self.builder.ins().iadd_imm(dst, offset);
+      |                                                   ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::iadd_imm`: use `iadd_imm_s` (sign-extends the immediate) or `iadd_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:18979:43
+      |
+18979 |             let rest = self.builder.ins().iadd_imm(index, 1);
+      |                                           ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::iadd_imm`: use `iadd_imm_s` (sign-extends the immediate) or `iadd_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:14649:63
+      |
+14649 | ...                   let done = this.builder.ins().iadd_imm(dst, offset);
+      |                                                     ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::imul_imm`: use `imul_imm_s` (sign-extends the immediate) or `imul_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:19020:41
+      |
+19020 |         let offset = self.builder.ins().imul_imm(index, size);
+      |                                         ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::iadd_imm`: use `iadd_imm_s` (sign-extends the immediate) or `iadd_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:19029:39
+      |
+19029 |         let next = self.builder.ins().iadd_imm(index, 1);
+      |                                       ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::band_imm`: use `band_imm_s` (sign-extends the immediate) or `band_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:17683:56
+      |
+17683 |                         let index = self.builder.ins().band_imm(index, 2 * lanes - 1);
+      |                                                        ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::ishl_imm`: use `ishl_imm_s` (sign-extends the immediate) or `ishl_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:15880:26
+      |
+15880 |                         .ishl_imm(top, i64::from(chunk) * i64::from(vector.lane_count()));
+      |                          ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::icmp_imm`: use `icmp_imm_s` (sign-extends the immediate) or `icmp_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:17689:57
+      |
+17689 |                         let second = self.builder.ins().icmp_imm(
+      |                                                         ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::band_imm`: use `band_imm_s` (sign-extends the immediate) or `band_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:17695:55
+      |
+17695 |                         let slot = self.builder.ins().band_imm(index, lanes - 1);
+      |                                                       ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::imul_imm`: use `imul_imm_s` (sign-extends the immediate) or `imul_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:14671:49
+      |
+14671 |                 let offset = self.builder.ins().imul_imm(index, size);
+      |                                                 ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::imul_imm`: use `imul_imm_s` (sign-extends the immediate) or `imul_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:17696:57
+      |
+17696 |                         let offset = self.builder.ins().imul_imm(slot, width);
+      |                                                         ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::iadd_imm`: use `iadd_imm_s` (sign-extends the immediate) or `iadd_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:14678:47
+      |
+14678 |                 let next = self.builder.ins().iadd_imm(index, 1);
+      |                                               ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::ushr_imm`: use `ushr_imm_s` (sign-extends the immediate) or `ushr_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:15886:50
+      |
+15886 |                     let top = self.builder.ins().ushr_imm(value, lane.ty.bits() as i64 - 1);
+      |                                                  ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::iadd_imm`: use `iadd_imm_s` (sign-extends the immediate) or `iadd_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:10094:47
+      |
+10094 |                 let addr = self.builder.ins().iadd_imm(*frame_addr, offset as i64);
+      |                                               ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::ishl_imm`: use `ishl_imm_s` (sign-extends the immediate) or `ishl_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:15892:50
+      |
+15892 |                     let top = self.builder.ins().ishl_imm(top, i as i64);
+      |                                                  ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::iadd_imm`: use `iadd_imm_s` (sign-extends the immediate) or `iadd_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:10104:47
+      |
+10104 |                 let addr = self.builder.ins().iadd_imm(*frame_addr, offset.bytes() as i64);
+      |                                               ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::iadd_imm`: use `iadd_imm_s` (sign-extends the immediate) or `iadd_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:13787:44
+      |
+13787 |                         self.builder.ins().iadd_imm(src, from.fields.offset(i).bytes() as i64);
+      |                                            ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::iadd_imm`: use `iadd_imm_s` (sign-extends the immediate) or `iadd_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:13788:50
+      |
+13788 |                     let dst = self.builder.ins().iadd_imm(dst, to.fields.offset(i).bytes() as i64);
+      |                                                  ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::band_imm`: use `band_imm_s` (sign-extends the immediate) or `band_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:16045:41
+      |
+16045 |                         let s = b.ins().band_imm(s, bits - 1);
+      |                                         ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::bxor_imm`: use `bxor_imm_s` (sign-extends the immediate) or `bxor_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:16046:44
+      |
+16046 |                         let rest = b.ins().bxor_imm(s, bits - 1);
+      |                                            ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::ushr_imm`: use `ushr_imm_s` (sign-extends the immediate) or `ushr_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:16048:45
+      |
+16048 | ...                   let l = b.ins().ushr_imm(l, 1);
+      |                                       ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::ishl_imm`: use `ishl_imm_s` (sign-extends the immediate) or `ishl_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:16051:45
+      |
+16051 | ...                   let h = b.ins().ishl_imm(h, 1);
+      |                                       ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::icmp_imm`: use `icmp_imm_s` (sign-extends the immediate) or `icmp_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:16069:50
+      |
+16069 |                     let set = self.builder.ins().icmp_imm(IntCC::NotEqual, value, 0);
+      |                                                  ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::icmp_imm`: use `icmp_imm_s` (sign-extends the immediate) or `icmp_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:16120:44
+      |
+16120 |                         self.builder.ins().icmp_imm(IntCC::SignedLessThan, chosen, 0)
+      |                                            ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::bxor_imm`: use `bxor_imm_s` (sign-extends the immediate) or `bxor_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:17851:50
+      |
+17851 |                 let flipped = self.builder.ins().bxor_imm(bits, 0x8000);
+      |                                                  ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::icmp_imm`: use `icmp_imm_s` (sign-extends the immediate) or `icmp_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:18010:43
+      |
+18010 |         let overflow = self.builder.ins().icmp_imm(IntCC::NotEqual, overflow, 0);
+      |                                           ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::icmp_imm`: use `icmp_imm_s` (sign-extends the immediate) or `icmp_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:18079:47
+      |
+18079 |             let negative = self.builder.ins().icmp_imm(IntCC::SignedLessThan, l, 0);
+      |                                               ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::imul_imm`: use `imul_imm_s` (sign-extends the immediate) or `imul_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:16325:49
+      |
+16325 |                 let offset = self.builder.ins().imul_imm(index, size);
+      |                                                 ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::iadd_imm`: use `iadd_imm_s` (sign-extends the immediate) or `iadd_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:16402:53
+      |
+16402 |                     let object = self.builder.ins().iadd_imm(exception, unwind::seh::OBJECT);
+      |                                                     ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::iadd_imm`: use `iadd_imm_s` (sign-extends the immediate) or `iadd_imm_u` (zero-extends the immediate) instead
+    --> crates/hir-ty-codegen/sve.rs:1460:52
+     |
+1460 |                     let place = self.builder.ins().iadd_imm(dst, at as i64 * DATA_MAX as i64);
+     |                                                    ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::iadd_imm`: use `iadd_imm_s` (sign-extends the immediate) or `iadd_imm_u` (zero-extends the immediate) instead
+    --> crates/hir-ty-codegen/sve.rs:1477:48
+     |
+1477 | ...                   self.builder.ins().iadd_imm(*tuple, index as i64 * DATA_MAX as i64);
+     |                                          ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::iadd_imm`: use `iadd_imm_s` (sign-extends the immediate) or `iadd_imm_u` (zero-extends the immediate) instead
+    --> crates/hir-ty-codegen/sve.rs:1487:48
+     |
+1487 | ...                   self.builder.ins().iadd_imm(dst, index as i64 * DATA_MAX as i64);
+     |                                          ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::iadd_imm`: use `iadd_imm_s` (sign-extends the immediate) or `iadd_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:16549:50
+      |
+16549 |                     let sum = self.builder.ins().iadd_imm(sum, 1);
+      |                                                  ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::ushr_imm`: use `ushr_imm_s` (sign-extends the immediate) or `ushr_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:16550:51
+      |
+16550 |                     let half = self.builder.ins().ushr_imm(sum, 1);
+      |                                                   ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::ushr_imm`: use `ushr_imm_s` (sign-extends the immediate) or `ushr_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:16562:51
+      |
+16562 |                     let high = self.builder.ins().ushr_imm(product, bits);
+      |                                                   ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::icmp_imm`: use `icmp_imm_s` (sign-extends the immediate) or `icmp_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:16574:44
+      |
+16574 |                         self.builder.ins().icmp_imm(IntCC::UnsignedGreaterThanOrEqual, r, bits);
+      |                                            ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::sshr_imm`: use `sshr_imm_s` (sign-extends the immediate) or `sshr_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:16672:55
+      |
+16672 |                         let high = self.builder.ins().sshr_imm(product, bits - 1);
+      |                                                       ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::icmp_imm`: use `icmp_imm_s` (sign-extends the immediate) or `icmp_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:16744:58
+      |
+16744 |                         let l_least = self.builder.ins().icmp_imm(IntCC::Equal, l, least);
+      |                                                          ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::icmp_imm`: use `icmp_imm_s` (sign-extends the immediate) or `icmp_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:16745:58
+      |
+16745 |                         let r_least = self.builder.ins().icmp_imm(IntCC::Equal, r, least);
+      |                                                          ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::ishl_imm`: use `ishl_imm_s` (sign-extends the immediate) or `ishl_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:16750:56
+      |
+16750 |                         let twice = self.builder.ins().ishl_imm(product, 1);
+      |                                                        ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::band_imm`: use `band_imm_s` (sign-extends the immediate) or `band_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:16776:55
+      |
+16776 |                         let slot = self.builder.ins().band_imm(index, 0x0f);
+      |                                                       ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::icmp_imm`: use `icmp_imm_s` (sign-extends the immediate) or `icmp_imm_u` (zero-extends the immediate) instead
+     --> crates/hir-ty-codegen/mod.rs:16785:48
+      |
+16785 | ...                   self.builder.ins().icmp_imm(IntCC::UnsignedGreaterThan, index, 15);
+      |                                          ^^^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::gimli::Dwarf::<T>::borrow`: use `DwarfSections::borrow` instead
+   --> crates/hir-ty-codegen/llvm/emitted.rs:186:27
+    |
+186 |         let dwarf = owned.borrow(|bytes| EndianSlice::new(bytes, LittleEndian));
+    |                           ^^^^^^
+
+warning: use of deprecated method `cranelift_codegen::ir::InstBuilder::ishl_imm`: use `ishl_imm_s` (sign-extends the immediate) or `ishl_imm_u` (zero-extends the immediate) instead
+   --> crates/hir-ty-codegen/f16_f128.rs:477:39
+    |
+477 |         let wide = self.builder.ins().ishl_imm(wide, 16);
+    |                                       ^^^^^^^^
+
+warning: unused import: `SliceLike`
+  --> crates/hir-ty-codegen/sve.rs:31:59
+   |
+31 | use rustc_type_ir::inherent::{GenericArgs as _, IntoKind, SliceLike as _};
+   |                                                           ^^^^^^^^^
+
+warning: unreachable pattern
+     --> crates/hir-ty-codegen/mod.rs:16264:13
+      |
+16192 |             ("powif32" | "powif64" | "powi", [base, power]) => {
+      |             ----------------------------------------------- matches all the relevant values
+...
+16264 |             ("powif32" | "powif64", [base, power]) => {
+      |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ no value can reach this
+      |
+      = note: `#[warn(unreachable_patterns)]` (part of `#[warn(unused)]`) on by default
+
+warning: variable does not need to be mutable
+     --> crates/hir-ty-codegen/mod.rs:11496:13
+      |
+11496 |         let mut function = |this: &mut Self, operand: &Operand| -> Result<Value> {
+      |             ----^^^^^^^^
+      |             |
+      |             help: remove this `mut`
+      |
+      = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: variable does not need to be mutable
+    --> crates/hir-ty-codegen/wasm.rs:1098:13
+     |
+1098 |         let mut local_of = |this: &mut Self, class: Class| {
+     |             ----^^^^^^^^
+     |             |
+     |             help: remove this `mut`
+
+warning: variable does not need to be mutable
+   --> crates/hir-ty-codegen/llvm/emitted.rs:933:13
+    |
+933 |         let mut uleb = |table: &mut EndianSlice<'_, _>| {
+    |             ----^^^^
+    |             |
+    |             help: remove this `mut`
+
+warning: type `codeview::CodeView` is more private than the item `DebugContext::CodeView::0`
+   --> crates/hir-ty-codegen/debuginfo.rs:376:14
+    |
+376 |     CodeView(CodeView),
+    |              ^^^^^^^^ field `DebugContext::CodeView::0` is reachable at visibility `pub(crate)`
+    |
+note: but type `codeview::CodeView` is only usable at visibility `pub(in crate::debuginfo)`
+   --> crates/hir-ty-codegen/debuginfo/codeview.rs:65:1
+    |
+ 65 | pub(super) struct CodeView {
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^
+    = note: `#[warn(private_interfaces)]` on by default
+
+warning: unreachable `pub` item
+   --> crates/hir-ty-codegen/home.rs:140:1
+    |
+140 | pub fn body_files(db: &dyn HirDatabase, instance: &Instance) -> Option<Box<[FileId]>> {
+    | ---^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    | |
+    | help: consider restricting its visibility: `pub(crate)`
+    |
+    = help: or consider exporting it for use by other crates
+    = note: requested on the command line with `-W unreachable-pub`
+
+warning: unreachable `pub` item
+   --> crates/hir-ty-codegen/fragment.rs:153:1
+    |
+153 | pub struct CompiledFunction {
+    | ---^^^^^^^^^^^^^^^^^^^^^^^^
+    | |
+    | help: consider restricting its visibility: `pub(crate)`
+    |
+    = help: or consider exporting it for use by other crates
+
+warning: unreachable `pub` item
+   --> crates/hir-ty-codegen/fragment.rs:239:1
+    |
+239 | pub struct CompiledStatic {
+    | ---^^^^^^^^^^^^^^^^^^^^^^
+    | |
+    | help: consider restricting its visibility: `pub(crate)`
+    |
+    = help: or consider exporting it for use by other crates
+
+warning: calls to `std::mem::drop` with a value that implements `Copy` does nothing
+    --> crates/hir-ty-codegen/mod.rs:4289:52
+     |
+4289 |                 body.walk_pats(arm.pat, &mut |pat| drop(tried.insert(pat, expr)));
+     |                                                    ^^^^^-----------------------^
+     |                                                         |
+     |                                                         argument has type `std::option::Option<la_arena::Idx<hir_def::hir::Expr>>`
+     |
+     = note: use `let _ = ...` to ignore the expression or result
+     = note: `#[warn(dropping_copy_types)]` on by default
+
+warning: field `builder_ctx` is never read
+   --> crates/hir-ty-codegen/fragment.rs:350:16
+    |
+335 | pub(super) struct Recorder<'db> {
+    |                   -------- field in this struct
+...
+350 |     pub(super) builder_ctx: FunctionBuilderContext,
+    |                ^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+   Compiling blaze-cargo v0.0.0 (/srv/build/blaze-src/crates/blaze-cargo)
+warning: `hir-ty-codegen` (lib) generated 170 warnings (run `cargo fix --lib -p hir-ty-codegen` to apply 11 suggestions)
+warning: constant `CYAN` is never used
+ --> crates/blaze-cargo/src/cargo/say.rs:9:7
+  |
+9 | const CYAN: &str = "\x1b[1m\x1b[96m";
+  |       ^^^^
+  |
+  = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `blaze-cargo` (lib) generated 1 warning
+warning: unused import: `syntax::AstNode`
+  --> crates/blaze-engine/src/consteval.rs:25:5
+   |
+25 | use syntax::AstNode as _;
+   |     ^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: fields `in_provided` and `exported` are never read
+    --> crates/blaze-engine/src/lib.rs:3829:5
+     |
+3820 | struct ListedCrate {
+     |        ----------- fields in this struct
+...
+3829 |     in_provided: Vec<FunctionId>,
+     |     ^^^^^^^^^^^
+3830 |     /// For each, whether a runtime looks it up by name.
+3831 |     exported: Vec<bool>,
+     |     ^^^^^^^^
+     |
+     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: constant `CHANNEL_FRESH` is never used
+  --> crates/blaze-engine/src/pin.rs:90:18
+   |
+90 | pub(crate) const CHANNEL_FRESH: std::time::Duration = std::time::Duration::from_secs(3600);
+   |                  ^^^^^^^^^^^^^
+
+warning: function `channel_known` is never used
+   --> crates/blaze-engine/src/pin.rs:100:15
+    |
+100 | pub(crate) fn channel_known(file: &Path) -> Option<(String, bool)> {
+    |               ^^^^^^^^^^^^^
+
+warning: `blaze-engine` (lib) generated 4 warnings
+    Finished `release` profile [optimized] target(s) in 2m 01s
+rc=0 121s
+DONE
